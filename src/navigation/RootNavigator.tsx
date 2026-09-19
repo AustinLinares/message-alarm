@@ -1,14 +1,17 @@
-import { createNavigationContainerRef, NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createNavigationContainerRef, NavigationContainer, useNavigation } from '@react-navigation/native';
+import { createNativeStackNavigator, type NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as Notifications from 'expo-notifications';
 import { useEffect } from 'react';
+import { Text, TouchableOpacity } from 'react-native';
 import { handleNotificationTap } from '../features/scheduledMessages/alarmHandler';
 import { CreateScheduledMessageScreen } from '../features/scheduledMessages/CreateScheduledMessageScreen';
 import { OccurrenceScreen } from '../features/scheduledMessages/OccurrenceScreen';
+import { SettingsScreen } from '../features/settings/SettingsScreen';
 
 export type RootStackParamList = {
   CreateScheduledMessage: undefined;
   Occurrence: { occurrenceId: string };
+  Settings: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -41,6 +44,15 @@ function useNotificationNavigation() {
   }, []);
 }
 
+function SettingsButton() {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  return (
+    <TouchableOpacity onPress={() => navigation.navigate('Settings')}>
+      <Text style={{ color: '#128C7E', fontWeight: '600' }}>Ajustes</Text>
+    </TouchableOpacity>
+  );
+}
+
 function Navigator() {
   useNotificationNavigation();
   return (
@@ -48,9 +60,10 @@ function Navigator() {
       <Stack.Screen
         name="CreateScheduledMessage"
         component={CreateScheduledMessageScreen}
-        options={{ title: 'Nuevo mensaje' }}
+        options={{ title: 'Nuevo mensaje', headerRight: () => <SettingsButton /> }}
       />
       <Stack.Screen name="Occurrence" component={OccurrenceScreen} options={{ title: 'Enviar mensaje' }} />
+      <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Ajustes' }} />
     </Stack.Navigator>
   );
 }
