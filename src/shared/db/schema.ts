@@ -56,6 +56,15 @@ CREATE TABLE IF NOT EXISTS occurrence_recipients (
 );
 `;
 
+// Links a scheduled message to the single native notification currently
+// scheduled for it, so it can be cancelled/replaced when edited or deleted.
+const CREATE_SCHEDULED_MESSAGE_NOTIFICATIONS = `
+CREATE TABLE IF NOT EXISTS scheduled_message_notifications (
+  scheduled_message_id TEXT PRIMARY KEY NOT NULL REFERENCES scheduled_messages(id) ON DELETE CASCADE,
+  notification_id TEXT NOT NULL
+);
+`;
+
 export async function migrate(db: SQLiteDatabase): Promise<void> {
   await db.execAsync('PRAGMA foreign_keys = ON;');
   await db.execAsync(
@@ -66,6 +75,7 @@ export async function migrate(db: SQLiteDatabase): Promise<void> {
       CREATE_SCHEDULED_MESSAGE_RECIPIENTS,
       CREATE_MESSAGE_OCCURRENCES,
       CREATE_OCCURRENCE_RECIPIENTS,
+      CREATE_SCHEDULED_MESSAGE_NOTIFICATIONS,
     ].join('\n')
   );
 }

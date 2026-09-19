@@ -14,7 +14,7 @@ import {
 import { ContactPicker, type PickedContact } from '../contacts/ContactPicker';
 import { createContact } from '../contacts/repository';
 import type { Contact, RecurrenceType } from '../../shared/types';
-import { createScheduledMessage } from './repository';
+import { createScheduledMessage } from './service';
 
 const MESSAGE_LIMIT = 180;
 const DAY_LABELS = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
