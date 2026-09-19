@@ -1,24 +1,18 @@
+import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { useState } from 'react';
-import {
-  Alert,
-  Modal,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { useEffect, useState } from 'react';
+import { Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { ContactPicker, type PickedContact } from '../contacts/ContactPicker';
-import { createContact } from '../contacts/repository';
+import { createContact, getContact } from '../contacts/repository';
 import { TemplatePicker } from '../templates/TemplatePicker';
+import type { RootStackParamList } from '../../navigation/RootNavigator';
+import { DAY_LABELS } from '../../shared/dayLabels';
 import type { Contact, MessageTemplate, RecurrenceType } from '../../shared/types';
-import { createScheduledMessage } from './service';
+import { getScheduledMessage } from './repository';
+import { createScheduledMessage, updateScheduledMessage } from './service';
 
 const MESSAGE_LIMIT = 180;
-const DAY_LABELS = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
 
 function mergeDate(base: Date, datePart: Date): Date {
   const next = new Date(base);
@@ -32,7 +26,13 @@ function mergeTime(base: Date, timePart: Date): Date {
   return next;
 }
 
-export function CreateScheduledMessageScreen() {
+export function ScheduledMessageFormScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const route = useRoute<RouteProp<RootStackParamList, 'ScheduledMessageForm'>>();
+  const scheduledMessageId = route.params?.scheduledMessageId;
+  const isEditing = !!scheduledMessageId;
+
+  const [loading, setLoading] = useState(isEditing);
   const [text, setText] = useState('');
   const [templateId, setTemplateId] = useState<string | undefined>(undefined);
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
@@ -46,6 +46,29 @@ export function CreateScheduledMessageScreen() {
   const [daysOfWeek, setDaysOfWeek] = useState<number[]>([]);
   const [showContactPicker, setShowContactPicker] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    navigation.setOptions({ title: isEditing ? 'Editar mensaje' : 'Nuevo mensaje' });
+  }, [navigation, isEditing]);
+
+  useEffect(() => {
+    if (!scheduledMessageId) return;
+    (async () => {
+      const message = await getScheduledMessage(scheduledMessageId);
+      if (!message) {
+        setLoading(false);
+        return;
+      }
+      const loadedRecipients = await Promise.all(message.recipientIds.map((id) => getContact(id)));
+      setText(message.text);
+      setTemplateId(message.templateId);
+      setRecipients(loadedRecipients.filter((contact): contact is Contact => contact !== null));
+      setStartAt(new Date(message.startAt));
+      setRecurrenceType(message.recurrence.type);
+      setDaysOfWeek(message.recurrence.daysOfWeek ?? []);
+      setLoading(false);
+    })();
+  }, [scheduledMessageId]);
 
   function hasPhoneNumber(phoneNumber: string): boolean {
     return recipients.some((recipient) => recipient.phoneNumber === phoneNumber);
@@ -86,15 +109,6 @@ export function CreateScheduledMessageScreen() {
     setDaysOfWeek((prev) => (prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day].sort()));
   }
 
-  function resetForm() {
-    setText('');
-    setTemplateId(undefined);
-    setRecipients([]);
-    setStartAt(new Date());
-    setRecurrenceType('none');
-    setDaysOfWeek([]);
-  }
-
   async function handleSave() {
     if (!text.trim()) {
       Alert.alert('Falta el mensaje', 'Escribe el texto que quieres programar.');
@@ -109,24 +123,43 @@ export function CreateScheduledMessageScreen() {
       return;
     }
 
+    const recurrence = { type: recurrenceType, daysOfWeek: recurrenceType === 'weekly' ? daysOfWeek : undefined };
+    const recipientIds = recipients.map((recipient) => recipient.id);
+
     setSaving(true);
     try {
-      await createScheduledMessage({
-        text: text.trim(),
-        templateId,
-        recipientIds: recipients.map((recipient) => recipient.id),
-        startAt: startAt.toISOString(),
-        recurrence: {
-          type: recurrenceType,
-          daysOfWeek: recurrenceType === 'weekly' ? daysOfWeek : undefined,
-        },
-        isActive: true,
-      });
-      Alert.alert('Listo', 'Mensaje programado creado.');
-      resetForm();
+      if (isEditing && scheduledMessageId) {
+        await updateScheduledMessage({
+          id: scheduledMessageId,
+          text: text.trim(),
+          templateId,
+          recipientIds,
+          startAt: startAt.toISOString(),
+          recurrence,
+          isActive: true,
+        });
+      } else {
+        await createScheduledMessage({
+          text: text.trim(),
+          templateId,
+          recipientIds,
+          startAt: startAt.toISOString(),
+          recurrence,
+          isActive: true,
+        });
+      }
+      navigation.goBack();
     } finally {
       setSaving(false);
     }
+  }
+
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <Text>Cargando...</Text>
+      </View>
+    );
   }
 
   return (
@@ -255,7 +288,9 @@ export function CreateScheduledMessageScreen() {
         disabled={saving}
         onPress={handleSave}
       >
-        <Text style={styles.primaryButtonText}>{saving ? 'Guardando...' : 'Guardar mensaje programado'}</Text>
+        <Text style={styles.primaryButtonText}>
+          {saving ? 'Guardando...' : isEditing ? 'Guardar cambios' : 'Guardar mensaje programado'}
+        </Text>
       </TouchableOpacity>
 
       <Modal visible={showContactPicker} animationType="slide" onRequestClose={() => setShowContactPicker(false)}>
@@ -270,7 +305,8 @@ export function CreateScheduledMessageScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
-  content: { padding: 16, paddingTop: Platform.OS === 'ios' ? 60 : 24, gap: 8 },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  content: { padding: 16, gap: 8 },
   label: { fontSize: 14, fontWeight: '600', color: '#333', marginTop: 16 },
   labelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 16 },
   secondaryLinkText: { color: '#128C7E', fontWeight: '600', fontSize: 13 },

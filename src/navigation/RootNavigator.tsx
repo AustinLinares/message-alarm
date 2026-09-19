@@ -2,14 +2,16 @@ import { createNavigationContainerRef, NavigationContainer, useNavigation } from
 import { createNativeStackNavigator, type NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as Notifications from 'expo-notifications';
 import { useEffect } from 'react';
-import { Text, TouchableOpacity } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 import { handleNotificationTap } from '../features/scheduledMessages/alarmHandler';
-import { CreateScheduledMessageScreen } from '../features/scheduledMessages/CreateScheduledMessageScreen';
 import { OccurrenceScreen } from '../features/scheduledMessages/OccurrenceScreen';
+import { ScheduledMessageFormScreen } from '../features/scheduledMessages/ScheduledMessageFormScreen';
+import { ScheduledMessagesListScreen } from '../features/scheduledMessages/ScheduledMessagesListScreen';
 import { SettingsScreen } from '../features/settings/SettingsScreen';
 
 export type RootStackParamList = {
-  CreateScheduledMessage: undefined;
+  ScheduledMessagesList: undefined;
+  ScheduledMessageForm: { scheduledMessageId?: string };
   Occurrence: { occurrenceId: string };
   Settings: undefined;
 };
@@ -44,12 +46,21 @@ function useNotificationNavigation() {
   }, []);
 }
 
-function SettingsButton() {
+function HeaderLink({ label, onPress }: { label: string; onPress: () => void }) {
+  return (
+    <TouchableOpacity onPress={onPress}>
+      <Text style={{ color: '#128C7E', fontWeight: '600' }}>{label}</Text>
+    </TouchableOpacity>
+  );
+}
+
+function ListHeaderActions() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   return (
-    <TouchableOpacity onPress={() => navigation.navigate('Settings')}>
-      <Text style={{ color: '#128C7E', fontWeight: '600' }}>Ajustes</Text>
-    </TouchableOpacity>
+    <>
+      <HeaderLink label="+ Nuevo" onPress={() => navigation.navigate('ScheduledMessageForm', {})} />
+      <HeaderLink label="Ajustes" onPress={() => navigation.navigate('Settings')} />
+    </>
   );
 }
 
@@ -58,10 +69,18 @@ function Navigator() {
   return (
     <Stack.Navigator>
       <Stack.Screen
-        name="CreateScheduledMessage"
-        component={CreateScheduledMessageScreen}
-        options={{ title: 'Nuevo mensaje', headerRight: () => <SettingsButton /> }}
+        name="ScheduledMessagesList"
+        component={ScheduledMessagesListScreen}
+        options={{
+          title: 'Mensajes programados',
+          headerRight: () => (
+            <View style={{ flexDirection: 'row', gap: 16 }}>
+              <ListHeaderActions />
+            </View>
+          ),
+        }}
       />
+      <Stack.Screen name="ScheduledMessageForm" component={ScheduledMessageFormScreen} />
       <Stack.Screen name="Occurrence" component={OccurrenceScreen} options={{ title: 'Enviar mensaje' }} />
       <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Ajustes' }} />
     </Stack.Navigator>
