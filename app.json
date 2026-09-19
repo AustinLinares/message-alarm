@@ -7,7 +7,10 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSContactsUsageDescription": "Se usa para elegir destinatarios de tus mensajes programados desde tu agenda."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -20,6 +23,22 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-sqlite",
+      "expo-sharing",
+      [
+        "expo-contacts",
+        {
+          "contactsPermission": "Se usa para elegir destinatarios de tus mensajes programados desde tu agenda."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png"
+        }
+      ]
+    ]
   }
 }
