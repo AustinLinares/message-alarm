@@ -1,8 +1,12 @@
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useState } from 'react';
 import { Alert, Linking, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import type { RootStackParamList } from '../../navigation/RootNavigator';
 import { exportBackup, importBackup } from './backupService';
 
 export function SettingsScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [working, setWorking] = useState(false);
 
   async function handleExport() {
@@ -71,6 +75,12 @@ export function SettingsScreen() {
           </TouchableOpacity>
         </View>
       )}
+
+      <View style={styles.aboutCard}>
+        <TouchableOpacity style={styles.secondaryButton} onPress={() => navigation.navigate('About')}>
+          <Text style={styles.secondaryButtonText}>Acerca de Message Alarm</Text>
+        </TouchableOpacity>
+      </View>
     </ScrollView>
   );
 }
@@ -85,4 +95,5 @@ const styles = StyleSheet.create({
   secondaryButton: { backgroundColor: '#eee', borderRadius: 8, padding: 14, alignItems: 'center', marginTop: 8 },
   secondaryButtonText: { color: '#333', fontWeight: '600' },
   batteryCard: { marginTop: 28, paddingTop: 16, borderTopWidth: 1, borderTopColor: '#eee' },
+  aboutCard: { marginTop: 28, paddingTop: 16, borderTopWidth: 1, borderTopColor: '#eee' },
 });

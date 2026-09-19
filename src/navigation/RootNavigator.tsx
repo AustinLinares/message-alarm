@@ -3,6 +3,7 @@ import { createNativeStackNavigator, type NativeStackNavigationProp } from '@rea
 import * as Notifications from 'expo-notifications';
 import { useEffect } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
+import { AboutScreen } from '../features/about/AboutScreen';
 import { handleNotificationTap } from '../features/scheduledMessages/alarmHandler';
 import { OccurrenceScreen } from '../features/scheduledMessages/OccurrenceScreen';
 import { ScheduledMessageFormScreen } from '../features/scheduledMessages/ScheduledMessageFormScreen';
@@ -14,6 +15,7 @@ export type RootStackParamList = {
   ScheduledMessageForm: { scheduledMessageId?: string };
   Occurrence: { occurrenceId: string };
   Settings: undefined;
+  About: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -83,6 +85,7 @@ function Navigator() {
       <Stack.Screen name="ScheduledMessageForm" component={ScheduledMessageFormScreen} />
       <Stack.Screen name="Occurrence" component={OccurrenceScreen} options={{ title: 'Enviar mensaje' }} />
       <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Ajustes' }} />
+      <Stack.Screen name="About" component={AboutScreen} options={{ title: 'Acerca de Message Alarm' }} />
     </Stack.Navigator>
   );
 }
