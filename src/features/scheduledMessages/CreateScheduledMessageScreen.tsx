@@ -13,7 +13,8 @@ import {
 } from 'react-native';
 import { ContactPicker, type PickedContact } from '../contacts/ContactPicker';
 import { createContact } from '../contacts/repository';
-import type { Contact, RecurrenceType } from '../../shared/types';
+import { TemplatePicker } from '../templates/TemplatePicker';
+import type { Contact, MessageTemplate, RecurrenceType } from '../../shared/types';
 import { createScheduledMessage } from './service';
 
 const MESSAGE_LIMIT = 180;
@@ -33,6 +34,8 @@ function mergeTime(base: Date, timePart: Date): Date {
 
 export function CreateScheduledMessageScreen() {
   const [text, setText] = useState('');
+  const [templateId, setTemplateId] = useState<string | undefined>(undefined);
+  const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   const [recipients, setRecipients] = useState<Contact[]>([]);
   const [manualName, setManualName] = useState('');
   const [manualPhone, setManualPhone] = useState('');
@@ -73,12 +76,19 @@ export function CreateScheduledMessageScreen() {
     setRecipients((prev) => prev.filter((recipient) => recipient.id !== id));
   }
 
+  function handleTemplateSelected(template: MessageTemplate) {
+    setShowTemplatePicker(false);
+    setText(template.text.slice(0, MESSAGE_LIMIT));
+    setTemplateId(template.id);
+  }
+
   function toggleDayOfWeek(day: number) {
     setDaysOfWeek((prev) => (prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day].sort()));
   }
 
   function resetForm() {
     setText('');
+    setTemplateId(undefined);
     setRecipients([]);
     setStartAt(new Date());
     setRecurrenceType('none');
@@ -103,6 +113,7 @@ export function CreateScheduledMessageScreen() {
     try {
       await createScheduledMessage({
         text: text.trim(),
+        templateId,
         recipientIds: recipients.map((recipient) => recipient.id),
         startAt: startAt.toISOString(),
         recurrence: {
@@ -120,14 +131,22 @@ export function CreateScheduledMessageScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.label}>Mensaje</Text>
+      <View style={styles.labelRow}>
+        <Text style={styles.label}>Mensaje</Text>
+        <TouchableOpacity onPress={() => setShowTemplatePicker(true)}>
+          <Text style={styles.secondaryLinkText}>Elegir plantilla</Text>
+        </TouchableOpacity>
+      </View>
       <TextInput
         style={styles.textArea}
         multiline
         maxLength={MESSAGE_LIMIT}
         placeholder="Escribe el mensaje que quieres enviar..."
         value={text}
-        onChangeText={setText}
+        onChangeText={(value) => {
+          setText(value);
+          setTemplateId(undefined);
+        }}
       />
       <Text style={styles.counter}>
         {text.length}/{MESSAGE_LIMIT}
@@ -242,6 +261,9 @@ export function CreateScheduledMessageScreen() {
       <Modal visible={showContactPicker} animationType="slide" onRequestClose={() => setShowContactPicker(false)}>
         <ContactPicker onConfirm={handleContactsPicked} onCancel={() => setShowContactPicker(false)} />
       </Modal>
+      <Modal visible={showTemplatePicker} animationType="slide" onRequestClose={() => setShowTemplatePicker(false)}>
+        <TemplatePicker onSelect={handleTemplateSelected} onClose={() => setShowTemplatePicker(false)} />
+      </Modal>
     </ScrollView>
   );
 }
@@ -250,6 +272,8 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
   content: { padding: 16, paddingTop: Platform.OS === 'ios' ? 60 : 24, gap: 8 },
   label: { fontSize: 14, fontWeight: '600', color: '#333', marginTop: 16 },
+  labelRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 16 },
+  secondaryLinkText: { color: '#128C7E', fontWeight: '600', fontSize: 13 },
   textArea: {
     borderWidth: 1,
     borderColor: '#ddd',
