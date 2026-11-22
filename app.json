@@ -8,18 +8,24 @@
     "userInterfaceStyle": "light",
     "ios": {
       "supportsTablet": true,
+      "bundleIdentifier": "com.coderuano.messagealarm",
       "infoPlist": {
         "NSContactsUsageDescription": "Se usa para elegir destinatarios de tus mensajes programados desde tu agenda."
       }
     },
     "android": {
+      "package": "com.coderuano.messagealarm",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.READ_CONTACTS",
+        "android.permission.WRITE_CONTACTS"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -40,6 +46,12 @@
         }
       ],
       "@react-native-community/datetimepicker"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "75650f46-a226-4786-b847-c47eebf3bd6e"
+      }
+    },
+    "owner": "coderuano"
   }
 }
