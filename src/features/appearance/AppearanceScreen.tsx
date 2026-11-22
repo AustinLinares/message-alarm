@@ -1,6 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { Check } from 'lucide-react-native';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { canChangeAppIcon } from '../../shared/appIcon';
 import { useI18n } from '../../shared/i18n';
 import { GRADIENT_IDS, GRADIENTS, SCREEN_PADDING_X, THEME_IDS, type Theme } from '../../shared/theme/themes';
 import { useAppSettings, useTheme, useThemedStyles } from '../../shared/theme/ThemeProvider';
@@ -85,6 +86,20 @@ export function AppearanceScreen() {
             label={t('appearance.follow_system')}
           />
         </View>
+
+        {canChangeAppIcon && (
+          <View style={[styles.panel, styles.panelRow]}>
+            <View style={styles.panelText}>
+              <Text style={styles.panelTitle}>{t('appearance.change_icon')}</Text>
+              <Text style={styles.panelSub}>{t('appearance.change_icon_sub')}</Text>
+            </View>
+            <Toggle
+              value={settings.changeIcon}
+              onValueChange={(changeIcon) => updateSettings({ changeIcon })}
+              label={t('appearance.change_icon')}
+            />
+          </View>
+        )}
       </ScrollView>
     </ScreenBackground>
   );

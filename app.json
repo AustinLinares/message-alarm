@@ -57,6 +57,35 @@
           "imageWidth": 200,
           "backgroundColor": "#4338CA"
         }
+      ],
+      [
+        "expo-alternate-app-icons",
+        [
+          {
+            "name": "suizo",
+            "ios": "./assets/icons/suizo-ios.png",
+            "android": {
+              "foregroundImage": "./assets/icons/suizo-android.png",
+              "backgroundColor": "#FFFFFF"
+            }
+          },
+          {
+            "name": "cristal",
+            "ios": "./assets/icons/cristal-ios.png",
+            "android": {
+              "foregroundImage": "./assets/icons/cristal-android.png",
+              "backgroundColor": "#0B1026"
+            }
+          },
+          {
+            "name": "bloqueo",
+            "ios": "./assets/icons/bloqueo-ios.png",
+            "android": {
+              "foregroundImage": "./assets/icons/bloqueo-android.png",
+              "backgroundColor": "#0C0A11"
+            }
+          }
+        ]
       ]
     ],
     "extra": {

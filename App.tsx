@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { RootNavigator } from './src/navigation/RootNavigator';
+import { applyAppIcon } from './src/shared/appIcon';
 import { I18nProvider } from './src/shared/i18n';
 import { initNotifications } from './src/shared/notifications/init';
 import { FONT_ASSETS } from './src/shared/theme/fonts';
@@ -14,7 +15,7 @@ void SplashScreen.preventAutoHideAsync();
 
 function Root() {
   const theme = useTheme();
-  const { ready } = useAppSettings();
+  const { ready, settings } = useAppSettings();
   const [fontsLoaded, fontError] = useFonts(FONT_ASSETS);
   const fontsSettled = fontsLoaded || !!fontError;
 
@@ -26,6 +27,10 @@ function Root() {
   useEffect(() => {
     void SystemUI.setBackgroundColorAsync(theme.color.background);
   }, [theme.color.background]);
+
+  useEffect(() => {
+    if (ready) void applyAppIcon(settings);
+  }, [ready, settings.theme, settings.changeIcon]);
 
   useEffect(() => {
     if (fontsSettled && ready) void SplashScreen.hideAsync();
