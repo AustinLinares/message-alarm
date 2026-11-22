@@ -1,5 +1,6 @@
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
+import { translate } from '../i18n';
 import type { ScheduledMessage } from '../types';
 import { computeNextOccurrence } from './computeNextOccurrence';
 import { clearNotificationLink, getNotificationLink, setNotificationLink } from './notificationLinkRepository';
@@ -20,7 +21,7 @@ export function configureNotificationHandling(): void {
 export async function setupAlarmChannel(): Promise<void> {
   if (Platform.OS !== 'android') return;
   await Notifications.setNotificationChannelAsync(ALARM_CHANNEL_ID, {
-    name: 'Alarmas de mensajes',
+    name: translate('notification.channel'),
     importance: Notifications.AndroidImportance.MAX,
     sound: 'default',
     vibrationPattern: [0, 250, 250, 250],
@@ -53,7 +54,7 @@ export async function scheduleNextOccurrence(message: ScheduledMessage, after: D
 
   const notificationId = await Notifications.scheduleNotificationAsync({
     content: {
-      title: 'Mensaje programado',
+      title: translate('notification.title'),
       body: message.text,
       sound: 'default',
       data: { scheduledMessageId: message.id },
@@ -65,4 +66,24 @@ export async function scheduleNextOccurrence(message: ScheduledMessage, after: D
     },
   });
   await setNotificationLink(message.id, notificationId);
+}
+
+export const SNOOZE_MINUTES = 10;
+
+// One-off reminder that reopens the same occurrence. It is not linked to the
+// message's regular alarm, so editing or pausing the message doesn't cancel it.
+export async function scheduleSnooze(message: ScheduledMessage, occurrenceId: string): Promise<void> {
+  await Notifications.scheduleNotificationAsync({
+    content: {
+      title: translate('notification.title'),
+      body: message.text,
+      sound: 'default',
+      data: { scheduledMessageId: message.id, occurrenceId },
+    },
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.DATE,
+      date: new Date(Date.now() + SNOOZE_MINUTES * 60 * 1000),
+      channelId: ALARM_CHANNEL_ID,
+    },
+  });
 }

@@ -1,5 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, SectionList, StyleSheet, Text, TouchableOpacity, View, type AlertButton } from 'react-native';
+import { Check } from 'lucide-react-native';
+import { Alert, Pressable, SectionList, StyleSheet, Text, View, type AlertButton } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useI18n } from '../../shared/i18n';
+import { type Theme } from '../../shared/theme/themes';
+import { useTheme, useThemedStyles } from '../../shared/theme/ThemeProvider';
+import { PrimaryButton, SecondaryButton } from '../../shared/ui/Buttons';
 import * as Contacts from 'expo-contacts';
 
 export interface PickedContact {
@@ -19,6 +25,10 @@ interface ContactPickerProps {
 }
 
 export function ContactPicker({ onConfirm, onCancel }: ContactPickerProps) {
+  const theme = useTheme();
+  const styles = useThemedStyles(createStyles);
+  const { t } = useI18n();
+  const insets = useSafeAreaInsets();
   const [status, setStatus] = useState<'loading' | 'denied' | 'ready'>('loading');
   const [contacts, setContacts] = useState<DeviceContact[]>([]);
   const [selected, setSelected] = useState<Map<string, PickedContact>>(new Map());
@@ -81,15 +91,15 @@ export function ContactPicker({ onConfirm, onCancel }: ContactPickerProps) {
         text: number,
         onPress: () => selectNumber(contact, number),
       })),
-      { text: 'Cancelar', style: 'cancel' as const },
+      { text: t('common.cancel'), style: 'cancel' as const },
     ];
-    Alert.alert(contact.name, 'Este contacto tiene varios números. Elige cuál usar:', buttons);
+    Alert.alert(contact.name, t('contacts.multiple_body'), buttons);
   }
 
   if (status === 'loading') {
     return (
       <View style={styles.center}>
-        <Text>Cargando contactos…</Text>
+        <Text style={styles.message}>{t('contacts.loading')}</Text>
       </View>
     );
   }
@@ -97,18 +107,14 @@ export function ContactPicker({ onConfirm, onCancel }: ContactPickerProps) {
   if (status === 'denied') {
     return (
       <View style={styles.center}>
-        <Text style={styles.message}>
-          Necesitamos permiso para acceder a tus contactos y poder elegir destinatarios.
-        </Text>
-        <TouchableOpacity style={styles.secondaryButton} onPress={onCancel}>
-          <Text style={styles.secondaryButtonText}>Volver</Text>
-        </TouchableOpacity>
+        <Text style={styles.message}>{t('contacts.permission')}</Text>
+        <SecondaryButton label={t('a11y.back')} onPress={onCancel} />
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <SectionList
         sections={sections}
         keyExtractor={(item) => item.id}
@@ -116,48 +122,66 @@ export function ContactPicker({ onConfirm, onCancel }: ContactPickerProps) {
         renderItem={({ item }) => {
           const isSelected = selected.has(item.id);
           return (
-            <TouchableOpacity style={styles.row} onPress={() => toggleContact(item)}>
-              <View style={[styles.checkbox, isSelected && styles.checkboxChecked]} />
+            <Pressable
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: isSelected }}
+              style={styles.row}
+              onPress={() => toggleContact(item)}
+            >
+              <View style={[styles.checkbox, isSelected && styles.checkboxChecked]}>
+                {isSelected && <Check size={14} color={theme.color.onPrimary} strokeWidth={3} />}
+              </View>
               <Text style={styles.rowText}>{item.name}</Text>
-            </TouchableOpacity>
+            </Pressable>
           );
         }}
       />
-      <View style={styles.footer}>
-        <TouchableOpacity style={styles.secondaryButton} onPress={onCancel}>
-          <Text style={styles.secondaryButtonText}>Cancelar</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.primaryButton, selected.size === 0 && styles.buttonDisabled]}
+      <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
+        <SecondaryButton label={t('common.cancel')} onPress={onCancel} style={{ flex: 1, minHeight: 56 }} />
+        <PrimaryButton
+          label={t('contacts.add_selected', { n: selected.size })}
           disabled={selected.size === 0}
           onPress={() => onConfirm(Array.from(selected.values()))}
-        >
-          <Text style={styles.primaryButtonText}>Agregar seleccionados ({selected.size})</Text>
-        </TouchableOpacity>
+          style={{ flex: 2 }}
+        />
       </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 16 },
-  message: { textAlign: 'center', fontSize: 15, color: '#333' },
-  sectionHeader: {
-    backgroundColor: '#f2f2f2',
-    paddingHorizontal: 16,
-    paddingVertical: 4,
-    fontWeight: '600',
-    color: '#666',
-  },
-  row: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, gap: 12 },
-  rowText: { fontSize: 16 },
-  checkbox: { width: 22, height: 22, borderRadius: 4, borderWidth: 2, borderColor: '#999' },
-  checkboxChecked: { backgroundColor: '#25D366', borderColor: '#25D366' },
-  footer: { flexDirection: 'row', gap: 12, padding: 16, borderTopWidth: 1, borderTopColor: '#eee' },
-  primaryButton: { flex: 1, backgroundColor: '#25D366', borderRadius: 8, padding: 14, alignItems: 'center' },
-  primaryButtonText: { color: '#fff', fontWeight: '600' },
-  secondaryButton: { flex: 1, backgroundColor: '#eee', borderRadius: 8, padding: 14, alignItems: 'center' },
-  secondaryButtonText: { color: '#333', fontWeight: '600' },
-  buttonDisabled: { opacity: 0.5 },
-});
+function createStyles(theme: Theme) {
+  const c = theme.color;
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: c.background },
+    center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 16, backgroundColor: c.background },
+    message: { textAlign: 'center', fontFamily: theme.font.body(400), fontSize: 15, color: c.textSecondary },
+    sectionHeader: {
+      backgroundColor: c.surfaceMuted,
+      paddingHorizontal: 20,
+      paddingVertical: 6,
+      fontFamily: theme.font.body(600),
+      color: c.textMuted,
+    },
+    row: { minHeight: 52, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, gap: 14 },
+    rowText: { fontFamily: theme.font.body(500), fontSize: 16, color: c.text, flexShrink: 1 },
+    checkbox: {
+      width: 24,
+      height: 24,
+      borderRadius: 7,
+      borderWidth: 2,
+      borderColor: c.chevron,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    checkboxChecked: { backgroundColor: c.primary, borderColor: c.primary },
+    footer: {
+      flexDirection: 'row',
+      gap: 12,
+      paddingHorizontal: 20,
+      paddingTop: 16,
+      borderTopWidth: 1,
+      borderTopColor: c.divider,
+      backgroundColor: c.background,
+    },
+  });
+}

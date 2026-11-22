@@ -1,5 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Alert, FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useI18n } from '../../shared/i18n';
+import { MESSAGE_MAX_LENGTH, type Theme } from '../../shared/theme/themes';
+import { useTheme, useThemedStyles } from '../../shared/theme/ThemeProvider';
+import { PrimaryButton, SecondaryButton } from '../../shared/ui/Buttons';
 import type { MessageTemplate } from '../../shared/types';
 import { createTemplate, deleteTemplate, listTemplates, updateTemplate } from './repository';
 
@@ -11,6 +16,10 @@ interface TemplatePickerProps {
 type Mode = { kind: 'list' } | { kind: 'form'; editing: MessageTemplate | null };
 
 export function TemplatePicker({ onSelect, onClose }: TemplatePickerProps) {
+  const theme = useTheme();
+  const styles = useThemedStyles(createStyles);
+  const { t } = useI18n();
+  const insets = useSafeAreaInsets();
   const [templates, setTemplates] = useState<MessageTemplate[]>([]);
   const [mode, setMode] = useState<Mode>({ kind: 'list' });
   const [name, setName] = useState('');
@@ -32,7 +41,7 @@ export function TemplatePicker({ onSelect, onClose }: TemplatePickerProps) {
 
   async function handleSaveTemplate() {
     if (!name.trim() || !text.trim()) {
-      Alert.alert('Faltan datos', 'Escribe un nombre y el texto de la plantilla.');
+      Alert.alert(t('templates.missing_title'), t('templates.missing_body'));
       return;
     }
     if (mode.kind === 'form' && mode.editing) {
@@ -45,10 +54,10 @@ export function TemplatePicker({ onSelect, onClose }: TemplatePickerProps) {
   }
 
   function handleDeleteTemplate(template: MessageTemplate) {
-    Alert.alert('Eliminar plantilla', `¿Eliminar "${template.name}"?`, [
-      { text: 'Cancelar', style: 'cancel' },
+    Alert.alert(t('templates.delete_title'), t('templates.delete_body', { name: template.name }), [
+      { text: t('common.cancel'), style: 'cancel' },
       {
-        text: 'Eliminar',
+        text: t('common.delete'),
         style: 'destructive',
         onPress: async () => {
           await deleteTemplate(template.id);
@@ -58,88 +67,101 @@ export function TemplatePicker({ onSelect, onClose }: TemplatePickerProps) {
     ]);
   }
 
+  const container = [styles.container, { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 16 }];
+
   if (mode.kind === 'form') {
     return (
-      <View style={styles.container}>
-        <Text style={styles.label}>Nombre</Text>
-        <TextInput style={styles.input} value={name} onChangeText={setName} placeholder="Ej. Recordatorio de pago" />
-        <Text style={styles.label}>Mensaje</Text>
+      <View style={container}>
+        <Text style={styles.label}>{t('templates.name')}</Text>
+        <TextInput
+          style={styles.input}
+          value={name}
+          onChangeText={setName}
+          placeholder={t('templates.name_placeholder')}
+          placeholderTextColor={theme.color.textMuted}
+        />
+        <Text style={styles.label}>{t('compose.message')}</Text>
         <TextInput
           style={[styles.input, styles.textArea]}
           value={text}
           onChangeText={setText}
+          maxLength={MESSAGE_MAX_LENGTH}
           multiline
-          placeholder="Escribe el mensaje de la plantilla..."
+          placeholder={t('templates.message_placeholder')}
+          placeholderTextColor={theme.color.textMuted}
         />
         <View style={styles.footer}>
-          <TouchableOpacity style={styles.secondaryButton} onPress={() => setMode({ kind: 'list' })}>
-            <Text style={styles.secondaryButtonText}>Cancelar</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.primaryButton} onPress={handleSaveTemplate}>
-            <Text style={styles.primaryButtonText}>Guardar</Text>
-          </TouchableOpacity>
+          <SecondaryButton label={t('common.cancel')} onPress={() => setMode({ kind: 'list' })} style={{ flex: 1, minHeight: 56 }} />
+          <PrimaryButton label={t('common.save')} onPress={handleSaveTemplate} style={{ flex: 1 }} />
         </View>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={container}>
       <FlatList
         data={templates}
         keyExtractor={(item) => item.id}
-        ListEmptyComponent={<Text style={styles.emptyText}>Aún no tienes plantillas.</Text>}
+        ListEmptyComponent={<Text style={styles.emptyText}>{t('templates.empty')}</Text>}
         renderItem={({ item }) => (
           <View style={styles.row}>
-            <TouchableOpacity style={styles.rowInfo} onPress={() => onSelect(item)}>
+            <Pressable accessibilityRole="button" style={styles.rowInfo} onPress={() => onSelect(item)}>
               <Text style={styles.rowName}>{item.name}</Text>
               <Text style={styles.rowPreview} numberOfLines={1}>
                 {item.text}
               </Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => openForm(item)}>
-              <Text style={styles.linkText}>Editar</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => handleDeleteTemplate(item)}>
-              <Text style={styles.deleteText}>Eliminar</Text>
-            </TouchableOpacity>
+            </Pressable>
+            <Pressable accessibilityRole="button" onPress={() => openForm(item)} style={styles.action}>
+              <Text style={styles.linkText}>{t('menu.edit')}</Text>
+            </Pressable>
+            <Pressable accessibilityRole="button" onPress={() => handleDeleteTemplate(item)} style={styles.action}>
+              <Text style={styles.deleteText}>{t('common.delete')}</Text>
+            </Pressable>
           </View>
         )}
       />
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.secondaryButton} onPress={onClose}>
-          <Text style={styles.secondaryButtonText}>Cerrar</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.primaryButton} onPress={() => openForm(null)}>
-          <Text style={styles.primaryButtonText}>+ Nueva plantilla</Text>
-        </TouchableOpacity>
+        <SecondaryButton label={t('common.close')} onPress={onClose} style={{ flex: 1, minHeight: 56 }} />
+        <PrimaryButton label={t('templates.new')} onPress={() => openForm(null)} style={{ flex: 1 }} />
       </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', padding: 16 },
-  label: { fontSize: 14, fontWeight: '600', color: '#333', marginTop: 12 },
-  input: { borderWidth: 1, borderColor: '#ddd', borderRadius: 8, padding: 10, marginTop: 4 },
-  textArea: { minHeight: 100, textAlignVertical: 'top' },
-  emptyText: { textAlign: 'center', color: '#999', marginTop: 40 },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  rowInfo: { flex: 1 },
-  rowName: { fontSize: 15, fontWeight: '600' },
-  rowPreview: { fontSize: 13, color: '#777', marginTop: 2 },
-  linkText: { color: '#128C7E', fontWeight: '600' },
-  deleteText: { color: '#d33', fontWeight: '600' },
-  footer: { flexDirection: 'row', gap: 12, paddingTop: 16, marginTop: 'auto' },
-  primaryButton: { flex: 1, backgroundColor: '#25D366', borderRadius: 8, padding: 14, alignItems: 'center' },
-  primaryButtonText: { color: '#fff', fontWeight: '700' },
-  secondaryButton: { flex: 1, backgroundColor: '#eee', borderRadius: 8, padding: 14, alignItems: 'center' },
-  secondaryButtonText: { color: '#333', fontWeight: '600' },
-});
+function createStyles(theme: Theme) {
+  const c = theme.color;
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: c.background, paddingHorizontal: 20 },
+    label: { fontFamily: theme.font.body(600), fontSize: 15, color: c.text, marginTop: 14 },
+    input: {
+      borderWidth: 1,
+      borderColor: c.border,
+      backgroundColor: c.surface,
+      color: c.text,
+      fontFamily: theme.font.body(400),
+      fontSize: 15,
+      borderRadius: theme.radius.input,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      marginTop: 6,
+    },
+    textArea: { minHeight: 110, textAlignVertical: 'top', lineHeight: 22 },
+    emptyText: { textAlign: 'center', fontFamily: theme.font.body(400), color: c.textMuted, marginTop: 40 },
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+      paddingVertical: 8,
+      borderBottomWidth: 1,
+      borderBottomColor: c.divider,
+    },
+    rowInfo: { flex: 1, minHeight: 44, justifyContent: 'center' },
+    rowName: { fontFamily: theme.font.body(600), fontSize: 15, color: c.text },
+    rowPreview: { fontFamily: theme.font.body(400), fontSize: 13, color: c.textMuted, marginTop: 2 },
+    action: { minHeight: 44, minWidth: 44, paddingHorizontal: 8, alignItems: 'center', justifyContent: 'center' },
+    linkText: { fontFamily: theme.font.body(600), color: c.primary },
+    deleteText: { fontFamily: theme.font.body(600), color: c.danger },
+    footer: { flexDirection: 'row', gap: 12, paddingTop: 16, marginTop: 'auto' },
+  });
+}

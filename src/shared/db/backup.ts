@@ -1,3 +1,4 @@
+import { loadSettings, sanitizeSettings, type AppSettings } from '../settings/repository';
 import { getDb } from './client';
 
 interface ContactRow {
@@ -48,6 +49,9 @@ export interface BackupPayload {
   scheduledMessageRecipients: ScheduledMessageRecipientRow[];
   messageOccurrences: MessageOccurrenceRow[];
   occurrenceRecipients: OccurrenceRecipientRow[];
+  // Added after v1 shipped. Optional so files exported by older app versions
+  // still import (they simply don't carry preferences).
+  settings?: Partial<AppSettings>;
 }
 
 export async function buildBackupPayload(): Promise<BackupPayload> {
@@ -63,6 +67,7 @@ export async function buildBackupPayload(): Promise<BackupPayload> {
     ),
     messageOccurrences: await db.getAllAsync<MessageOccurrenceRow>('SELECT * FROM message_occurrences;'),
     occurrenceRecipients: await db.getAllAsync<OccurrenceRecipientRow>('SELECT * FROM occurrence_recipients;'),
+    settings: await loadSettings(),
   };
 }
 
@@ -86,6 +91,8 @@ export function isBackupPayload(value: unknown): value is BackupPayload {
 // (see features/settings/backupService.ts).
 export async function restoreFromBackupPayload(payload: BackupPayload): Promise<void> {
   const db = await getDb();
+  // Missing settings (older backup) keep the current preferences untouched.
+  const restoredSettings = payload.settings ? sanitizeSettings(payload.settings, await loadSettings()) : null;
   await db.withExclusiveTransactionAsync(async (txn) => {
     await txn.execAsync(
       [
@@ -139,6 +146,11 @@ export async function restoreFromBackupPayload(payload: BackupPayload): Promise<
         'INSERT INTO occurrence_recipients (occurrence_id, contact_id, status) VALUES (?, ?, ?);',
         [row.occurrence_id, row.contact_id, row.status]
       );
+    }
+    if (restoredSettings) {
+      for (const [key, value] of Object.entries(restoredSettings)) {
+        await txn.runAsync('INSERT OR REPLACE INTO app_settings (key, value) VALUES (?, ?);', [key, JSON.stringify(value)]);
+      }
     }
   });
 }

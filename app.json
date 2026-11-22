@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "message-alarm",
+    "name": "Message Alarm",
     "slug": "message-alarm",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.coderuano.messagealarm",
@@ -16,7 +16,7 @@
     "android": {
       "package": "com.coderuano.messagealarm",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#4338CA",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
@@ -25,7 +25,8 @@
       "permissions": [
         "android.permission.READ_CONTACTS",
         "android.permission.WRITE_CONTACTS"
-      ]
+      ],
+      "icon": "./assets/icon.png"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -42,10 +43,21 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/icon.png"
+          "icon": "./assets/notification-icon.png",
+          "color": "#4338CA"
         }
       ],
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "expo-localization",
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200,
+          "backgroundColor": "#4338CA"
+        }
+      ]
     ],
     "extra": {
       "eas": {

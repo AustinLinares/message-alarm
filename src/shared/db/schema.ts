@@ -65,6 +65,14 @@ CREATE TABLE IF NOT EXISTS scheduled_message_notifications (
 );
 `;
 
+// Local-only app preferences (theme, gradient...). Included in the backup.
+const CREATE_APP_SETTINGS = `
+CREATE TABLE IF NOT EXISTS app_settings (
+  key TEXT PRIMARY KEY NOT NULL,
+  value TEXT NOT NULL
+);
+`;
+
 export async function migrate(db: SQLiteDatabase): Promise<void> {
   await db.execAsync('PRAGMA foreign_keys = ON;');
   await db.execAsync(
@@ -76,6 +84,7 @@ export async function migrate(db: SQLiteDatabase): Promise<void> {
       CREATE_MESSAGE_OCCURRENCES,
       CREATE_OCCURRENCE_RECIPIENTS,
       CREATE_SCHEDULED_MESSAGE_NOTIFICATIONS,
+      CREATE_APP_SETTINGS,
     ].join('\n')
   );
 }

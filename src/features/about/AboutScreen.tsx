@@ -1,67 +1,75 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useI18n } from '../../shared/i18n';
+import { type Theme } from '../../shared/theme/themes';
+import { useThemedStyles } from '../../shared/theme/ThemeProvider';
+import { BrandMark } from '../../shared/ui/BrandMark';
+import { TopBar } from '../../shared/ui/TopBar';
 
-interface Section {
-  title: string;
-  body: string;
-}
-
-const SECTIONS: Section[] = [
-  {
-    title: 'El problema',
-    body:
-      'WhatsApp Business API cobra por conversación, y las alternativas gratuitas de mensajería automatizada ' +
-      'suelen terminar bloqueadas después de enviar algunos mensajes. Para un negocio que recién empieza, ' +
-      'ninguna de las dos opciones es realista.',
-  },
-  {
-    title: 'La idea',
-    body:
-      'Message Alarm no envía mensajes por ti — eso requeriría una API paga. En vez de eso, te ayuda a dejar el ' +
-      'mensaje listo, programar una alarma, y con un toque abrir WhatsApp (u otra app) con el número y el texto ' +
-      'ya cargados. El envío final siempre lo confirmas tú.',
-  },
-  {
-    title: '¿Para quién es?',
-    body:
-      'Está pensada para micro y pequeños emprendedores que están iniciando y todavía no pueden costear un ' +
-      'proveedor de mensajería o una integración empresarial. No busca reemplazar una solución de mensajería ' +
-      'masiva para empresas grandes.',
-  },
-  {
-    title: 'Privacidad',
-    body:
-      'Todo se guarda solo en este dispositivo. No hay backend ni nube, y los mensajes que compones no se ' +
-      'comparten con nadie más que contigo. Para llevar tus datos a otro celular, usa el backup manual en Ajustes.',
-  },
-  {
-    title: 'Una limitación honesta',
-    body:
-      'Ninguna integración (WhatsApp, Instagram, LinkedIn...) permite confirmar que un mensaje realmente se ' +
-      'envió. Por eso el check de "confirmado" en cada destinatario lo marcas tú mismo, no la app.',
-  },
+const SECTIONS = [
+  { title: 'about.problem_title', body: 'about.problem_body' },
+  { title: 'about.idea_title', body: 'about.idea_body' },
+  { title: 'about.who_title', body: 'about.who_body' },
+  { title: 'about.privacy_title', body: 'about.privacy_body' },
+  { title: 'about.limit_title', body: 'about.limit_body' },
 ];
 
 export function AboutScreen() {
+  const styles = useThemedStyles(createStyles);
+  const { t } = useI18n();
+
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.intro}>
-        Una alternativa gratuita a WhatsApp Business, pensada para negocios que recién empiezan.
-      </Text>
-      {SECTIONS.map((section) => (
-        <View key={section.title} style={styles.card}>
-          <Text style={styles.cardTitle}>{section.title}</Text>
-          <Text style={styles.cardBody}>{section.body}</Text>
+    <View style={styles.container}>
+      <TopBar title={t('settings.about')} subtle />
+      <ScrollView contentContainerStyle={styles.content}>
+        <View style={styles.hero}>
+          <View style={styles.logoTile}>
+            <BrandMark size={36} body="#FFFFFF" bells="#F5B83D" lines="#4338CA" />
+          </View>
+          <Text accessibilityRole="header" style={styles.headline}>
+            {t('about.headline')}
+          </Text>
         </View>
-      ))}
-    </ScrollView>
+        {SECTIONS.map((section, index) => (
+          <View key={section.title} style={styles.section}>
+            <Text style={styles.number}>{String(index + 1).padStart(2, '0')}</Text>
+            <View style={styles.sectionText}>
+              <Text accessibilityRole="header" style={styles.sectionTitle}>
+                {t(section.title)}
+              </Text>
+              <Text style={styles.sectionBody}>{t(section.body)}</Text>
+            </View>
+          </View>
+        ))}
+      </ScrollView>
+    </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
-  content: { padding: 16, gap: 12 },
-  intro: { fontSize: 15, fontWeight: '600', color: '#111', lineHeight: 21, marginBottom: 4 },
-  card: { backgroundColor: '#f2f2f2', borderRadius: 12, padding: 16 },
-  cardTitle: { fontSize: 14, fontWeight: '700', color: '#128C7E', marginBottom: 6 },
-  cardBody: { fontSize: 14, color: '#333', lineHeight: 20 },
-});
+function createStyles(theme: Theme) {
+  const c = theme.color;
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: c.background },
+    content: { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 48, gap: 28 },
+    hero: { gap: 16 },
+    logoTile: {
+      width: 56,
+      height: 56,
+      borderRadius: 16,
+      backgroundColor: c.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    headline: {
+      fontFamily: theme.font.display(600),
+      fontSize: 30,
+      lineHeight: 35,
+      letterSpacing: -0.5,
+      color: c.text,
+    },
+    section: { flexDirection: 'row', gap: 16, paddingTop: 22, borderTopWidth: 1, borderTopColor: c.border },
+    number: { width: 32, fontFamily: theme.font.display(600), fontSize: 15, color: c.primary },
+    sectionText: { flex: 1, gap: 8 },
+    sectionTitle: { fontFamily: theme.font.body(700), fontSize: 17, color: c.text },
+    sectionBody: { fontFamily: theme.font.body(400), fontSize: 15, lineHeight: 24, color: c.textSecondary },
+  });
+}
