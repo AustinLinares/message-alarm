@@ -23,7 +23,7 @@ export function PrimaryButton({ label, onPress, icon, disabled, style }: ButtonP
         styles.primary,
         {
           backgroundColor: pressed ? theme.color.primaryPressed : theme.color.primary,
-          borderRadius: theme.radius.card,
+          borderRadius: theme.ui.buttonRadius,
           opacity: disabled ? 0.55 : 1,
         },
         style,
@@ -48,7 +48,7 @@ export function SecondaryButton({ label, onPress, icon, disabled, style }: Butto
       style={[
         styles.secondary,
         {
-          borderColor: theme.color.border,
+          borderColor: theme.color.borderStrong,
           backgroundColor: theme.color.surface,
           borderRadius: theme.radius.control,
           opacity: disabled ? 0.55 : 1,

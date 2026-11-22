@@ -1,8 +1,10 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useI18n } from '../../shared/i18n';
 import { type Theme } from '../../shared/theme/themes';
-import { useThemedStyles } from '../../shared/theme/ThemeProvider';
-import { BrandMark } from '../../shared/ui/BrandMark';
+import { useTheme, useThemedStyles } from '../../shared/theme/ThemeProvider';
+import { BrandMark, brandColors } from '../../shared/ui/BrandMark';
+import { GradientText } from '../../shared/ui/GradientText';
+import { ScreenBackground } from '../../shared/ui/ScreenBackground';
 import { TopBar } from '../../shared/ui/TopBar';
 
 const SECTIONS = [
@@ -14,24 +16,40 @@ const SECTIONS = [
 ];
 
 export function AboutScreen() {
+  const theme = useTheme();
   const styles = useThemedStyles(createStyles);
+  const palette = brandColors(theme);
+  const upper = (text: string) => (theme.ui.uppercase ? text.toUpperCase() : text);
+  const lock = theme.id === 'bloqueo';
   const { t } = useI18n();
 
   return (
-    <View style={styles.container}>
+    <ScreenBackground>
       <TopBar title={t('settings.about')} subtle />
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.hero}>
           <View style={styles.logoTile}>
-            <BrandMark size={36} body="#FFFFFF" bells="#F5B83D" lines="#4338CA" />
+            <BrandMark size={36} body={palette.body} bells={palette.bells} lines={palette.lines} />
           </View>
-          <Text accessibilityRole="header" style={styles.headline}>
-            {t('about.headline')}
-          </Text>
+          {lock ? (
+            <GradientText gradient={theme.gradient} style={styles.headline}>
+              {t('about.headline')}
+            </GradientText>
+          ) : (
+            <Text accessibilityRole="header" style={styles.headline}>
+              {t('about.headline')}
+            </Text>
+          )}
         </View>
         {SECTIONS.map((section, index) => (
           <View key={section.title} style={styles.section}>
-            <Text style={styles.number}>{String(index + 1).padStart(2, '0')}</Text>
+            {lock ? (
+              <GradientText gradient={theme.gradient} style={styles.number}>
+                {String(index + 1).padStart(2, '0')}
+              </GradientText>
+            ) : (
+              <Text style={styles.number}>{String(index + 1).padStart(2, '0')}</Text>
+            )}
             <View style={styles.sectionText}>
               <Text accessibilityRole="header" style={styles.sectionTitle}>
                 {t(section.title)}
@@ -41,35 +59,55 @@ export function AboutScreen() {
           </View>
         ))}
       </ScrollView>
-    </View>
+    </ScreenBackground>
   );
 }
 
 function createStyles(theme: Theme) {
   const c = theme.color;
+  const swiss = theme.ui.ruled;
+  const boxed = theme.id === 'cristal' || theme.id === 'bloqueo';
   return StyleSheet.create({
-    container: { flex: 1, backgroundColor: c.background },
-    content: { paddingHorizontal: 24, paddingTop: 16, paddingBottom: 48, gap: 28 },
-    hero: { gap: 16 },
+    content: { paddingHorizontal: swiss ? 20 : boxed ? 20 : 24, paddingTop: 16, paddingBottom: 48, gap: boxed ? 12 : 28 },
+    hero: { gap: 16, paddingBottom: boxed ? 8 : 0 },
     logoTile: {
       width: 56,
       height: 56,
-      borderRadius: 16,
+      borderRadius: swiss ? 0 : 16,
       backgroundColor: c.primary,
       alignItems: 'center',
       justifyContent: 'center',
     },
     headline: {
-      fontFamily: theme.font.display(600),
-      fontSize: 30,
-      lineHeight: 35,
-      letterSpacing: -0.5,
+      fontFamily: theme.font.heading(theme.id === 'cristal' ? 300 : swiss ? 800 : 600),
+      fontSize: swiss ? 40 : theme.id === 'bloqueo' ? 34 : theme.id === 'cristal' ? 32 : 30,
+      lineHeight: swiss ? 42 : 38,
+      letterSpacing: swiss ? -2 : -0.5,
       color: c.text,
     },
-    section: { flexDirection: 'row', gap: 16, paddingTop: 22, borderTopWidth: 1, borderTopColor: c.border },
-    number: { width: 32, fontFamily: theme.font.display(600), fontSize: 15, color: c.primary },
+    section: boxed
+      ? {
+          flexDirection: 'row',
+          gap: 16,
+          padding: 18,
+          borderRadius: 24,
+          backgroundColor: c.surface,
+          borderWidth: 1,
+          borderColor: c.border,
+        }
+      : { flexDirection: 'row', gap: 16, paddingTop: 22, borderTopWidth: 1, borderTopColor: swiss ? c.borderStrong : c.border },
+    number: {
+      width: 32,
+      fontFamily: theme.font.heading(theme.id === 'bloqueo' ? 900 : 600),
+      fontSize: theme.id === 'bloqueo' ? 18 : 15,
+      color: swiss ? c.textMuted : c.primary,
+    },
     sectionText: { flex: 1, gap: 8 },
-    sectionTitle: { fontFamily: theme.font.body(700), fontSize: 17, color: c.text },
+    sectionTitle: {
+      fontFamily: theme.font.body(theme.id === 'cristal' ? 500 : 700),
+      fontSize: 17,
+      color: theme.id === 'cristal' ? c.primary : c.text,
+    },
     sectionBody: { fontFamily: theme.font.body(400), fontSize: 15, lineHeight: 24, color: c.textSecondary },
   });
 }

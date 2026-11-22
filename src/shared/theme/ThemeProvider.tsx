@@ -43,7 +43,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<ThemeContextValue>(
     () => ({
-      theme: getTheme(effectiveThemeId(settings, systemScheme)),
+      theme: getTheme(effectiveThemeId(settings, systemScheme), settings.gradient),
       settings,
       ready,
       updateSettings,

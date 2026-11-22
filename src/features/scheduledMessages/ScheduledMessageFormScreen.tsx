@@ -14,6 +14,8 @@ import { computeNextOccurrence } from '../../shared/notifications/computeNextOcc
 import { MESSAGE_MAX_LENGTH, SCREEN_PADDING_X, type Theme } from '../../shared/theme/themes';
 import { useTheme, useThemedStyles } from '../../shared/theme/ThemeProvider';
 import { PrimaryButton } from '../../shared/ui/Buttons';
+import { Clock } from '../../shared/ui/Clock';
+import { ScreenBackground } from '../../shared/ui/ScreenBackground';
 import { TopBar } from '../../shared/ui/TopBar';
 import type { Contact, MessageTemplate, RecurrenceType } from '../../shared/types';
 import { getScheduledMessage } from './repository';
@@ -185,19 +187,25 @@ export function ScheduledMessageFormScreen() {
   const title = isEditing ? t('compose.edit_title') : t('compose.title');
   const saveLabel = saving ? t('compose.saving') : isEditing ? t('compose.save_changes') : t('compose.schedule');
 
+  const upper = (text: string) => (theme.ui.uppercase ? text.toUpperCase() : text);
+  const clockSize = { indigo: 52, suizo: 84, cristal: 72, bloqueo: 96 }[theme.id];
+
   return (
-    <View style={styles.container}>
+    <ScreenBackground>
       <TopBar title={title} />
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.ringsCard}>
-          <Text style={styles.sectionCaps}>{t('compose.rings_at')}</Text>
+          <View style={styles.capsRow}>
+            {theme.ui.ruled && <View style={styles.dot} />}
+            <Text style={styles.sectionCaps}>{upper(t('compose.rings_at'))}</Text>
+          </View>
           <View style={styles.timeRow}>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={t('compose.change_time', { time: i18n.formatTime(startAt) })}
               onPress={() => setShowTimePicker(true)}
             >
-              <Text style={styles.bigTime}>{i18n.formatTime(startAt)}</Text>
+              <Clock time={i18n.formatTime(startAt)} size={clockSize} color={theme.color.text} />
             </Pressable>
             <Pressable
               accessibilityRole="button"
@@ -206,7 +214,7 @@ export function ScheduledMessageFormScreen() {
               style={styles.dateButton}
             >
               <Calendar size={18} color={theme.color.text} />
-              <Text style={styles.dateButtonText}>{i18n.formatDay(startAt)}</Text>
+              <Text style={styles.dateButtonText}>{upper(i18n.formatDay(startAt))}</Text>
             </Pressable>
           </View>
           <View accessibilityRole="radiogroup" style={styles.segmented}>
@@ -220,7 +228,7 @@ export function ScheduledMessageFormScreen() {
                   onPress={() => setRecurrenceType(type)}
                   style={[styles.segment, selected && styles.segmentSelected]}
                 >
-                  <Text style={[styles.segmentText, selected && styles.segmentTextSelected]}>{t(key)}</Text>
+                  <Text style={[styles.segmentText, selected && styles.segmentTextSelected]}>{upper(t(key))}</Text>
                 </Pressable>
               );
             })}
@@ -269,9 +277,9 @@ export function ScheduledMessageFormScreen() {
 
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>{t('compose.message')}</Text>
+            <Text style={styles.sectionTitle}>{upper(t('compose.message'))}</Text>
             <Pressable accessibilityRole="button" onPress={() => setShowTemplatePicker(true)} style={styles.templatesButton}>
-              <LayoutGrid size={16} color={theme.color.primary} />
+              <LayoutGrid size={16} color={theme.ui.ruled ? theme.color.text : theme.color.primary} />
               <Text style={styles.templatesText}>{t('compose.templates')}</Text>
             </Pressable>
           </View>
@@ -287,11 +295,11 @@ export function ScheduledMessageFormScreen() {
               setTemplateId(undefined);
             }}
           />
-          <Text style={styles.counter}>{t('compose.counter', { n: text.length })}</Text>
+          <Text style={styles.counter}>{t('compose.counter', { n: theme.ui.ruled ? String(text.length).padStart(3, '0') : text.length })}</Text>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{t('compose.recipients')}</Text>
+          <Text style={styles.sectionTitle}>{upper(t('compose.recipients'))}</Text>
           {recipients.length > 0 && (
             <View style={styles.chips}>
               {recipients.map((recipient) => (
@@ -338,7 +346,7 @@ export function ScheduledMessageFormScreen() {
               onPress={addManualRecipient}
               style={styles.addButton}
             >
-              <Plus size={20} color={theme.color.textOnInverse} strokeWidth={2.4} />
+              <Plus size={20} color={theme.id === 'indigo' ? theme.color.textOnInverse : theme.color.onPrimary} strokeWidth={2.4} />
             </Pressable>
           </View>
           <Pressable accessibilityRole="button" onPress={() => setShowContactPicker(true)} style={styles.pickContacts}>
@@ -363,47 +371,50 @@ export function ScheduledMessageFormScreen() {
       <Modal visible={showTemplatePicker} animationType="slide" onRequestClose={() => setShowTemplatePicker(false)}>
         <TemplatePicker onSelect={handleTemplateSelected} onClose={() => setShowTemplatePicker(false)} />
       </Modal>
-    </View>
+    </ScreenBackground>
   );
 }
 
 function createStyles(theme: Theme) {
   const c = theme.color;
-  const field = {
-    borderWidth: 1,
-    borderColor: c.border,
-    backgroundColor: c.surface,
-    color: c.text,
-    fontFamily: theme.font.body(400),
-    fontSize: 15,
-  } as const;
+  const swiss = theme.ui.ruled;
+  const caps = theme.ui.uppercase;
+  const boxed = { borderWidth: theme.ui.cardBorder, borderColor: c.border };
+  const field = swiss
+    ? ({
+        borderWidth: 0,
+        borderBottomWidth: 1,
+        borderBottomColor: c.borderStrong,
+        backgroundColor: 'transparent',
+      } as const)
+    : ({ borderWidth: 1, borderColor: c.border, backgroundColor: c.surface } as const);
+  const fieldText = { color: c.text, fontFamily: theme.font.body(400), fontSize: 15 } as const;
+  const segRadius = theme.id === 'indigo' ? 14 : theme.ui.buttonRadius;
+  const segInner = theme.id === 'indigo' ? 10 : theme.ui.buttonRadius;
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: c.background },
     center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: c.background },
     muted: { fontFamily: theme.font.body(400), color: c.textMuted },
-    content: { paddingHorizontal: SCREEN_PADDING_X, paddingTop: 8, paddingBottom: 140, gap: 22 },
-    ringsCard: { padding: 18, borderRadius: theme.radius.cardLarge, backgroundColor: c.surface, gap: 14 },
+    content: { paddingHorizontal: SCREEN_PADDING_X, paddingTop: 8, paddingBottom: 140, gap: swiss ? 16 : 22 },
+    ringsCard: swiss
+      ? { paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: c.borderStrong, gap: 12 }
+      : { padding: 18, borderRadius: theme.radius.cardLarge, backgroundColor: c.surface, gap: 14, ...boxed },
+    capsRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    dot: { width: 10, height: 10, borderRadius: 5, backgroundColor: c.accent },
     sectionCaps: {
       fontFamily: theme.font.body(600),
       fontSize: 13,
       letterSpacing: 0.6,
-      textTransform: 'uppercase',
-      color: c.textMuted,
+      textTransform: caps ? 'uppercase' : theme.id === 'indigo' ? 'uppercase' : 'none',
+      color: swiss ? c.text : c.textMuted,
     },
-    timeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
-    bigTime: {
-      fontFamily: theme.font.display(theme.clock.weight),
-      fontSize: 52,
-      letterSpacing: theme.clock.letterSpacing,
-      color: c.text,
-      lineHeight: 58,
-    },
+    timeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' },
     dateButton: {
       minHeight: 44,
       paddingHorizontal: 14,
-      borderRadius: theme.radius.control,
+      borderRadius: theme.id === 'bloqueo' ? 999 : theme.radius.control,
       borderWidth: 1,
-      borderColor: c.border,
+      borderColor: c.borderStrong,
       backgroundColor: c.surface,
       flexDirection: 'row',
       alignItems: 'center',
@@ -411,24 +422,39 @@ function createStyles(theme: Theme) {
       flexShrink: 1,
     },
     dateButtonText: { fontFamily: theme.font.body(600), fontSize: 14, color: c.text, flexShrink: 1 },
-    segmented: { flexDirection: 'row', gap: 4, padding: 4, borderRadius: 14, backgroundColor: c.surfaceMuted },
-    segment: { flex: 1, minHeight: 40, borderRadius: 10, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 },
+    segmented: {
+      flexDirection: 'row',
+      gap: swiss ? 0 : 4,
+      padding: swiss ? 0 : 4,
+      borderRadius: segRadius,
+      backgroundColor: c.surfaceMuted,
+      borderWidth: theme.id === 'indigo' ? 0 : 1,
+      borderColor: c.borderStrong,
+    },
+    segment: {
+      flex: 1,
+      minHeight: swiss ? 44 : 40,
+      borderRadius: segInner,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 4,
+    },
     segmentSelected: {
-      backgroundColor: c.surface,
-      shadowColor: '#14162B',
-      shadowOpacity: 0.12,
-      shadowRadius: 3,
-      shadowOffset: { width: 0, height: 1 },
-      elevation: 2,
+      backgroundColor: c.segmentSelected,
+      ...(theme.id === 'indigo'
+        ? { shadowColor: '#14162B', shadowOpacity: 0.12, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 2 }
+        : {}),
     },
     segmentText: { fontFamily: theme.font.body(500), fontSize: 14, color: c.textSecondary, textAlign: 'center' },
-    segmentTextSelected: { fontFamily: theme.font.body(700), color: c.text },
+    segmentTextSelected: { fontFamily: theme.font.body(700), color: c.onSegmentSelected },
     daysRow: { flexDirection: 'row', justifyContent: 'space-between' },
     dayButton: {
       width: 40,
       height: 40,
-      borderRadius: 20,
+      borderRadius: swiss ? 0 : 20,
       backgroundColor: c.surfaceMuted,
+      borderWidth: swiss ? 1 : 0,
+      borderColor: c.borderStrong,
       alignItems: 'center',
       justifyContent: 'center',
     },
@@ -437,69 +463,95 @@ function createStyles(theme: Theme) {
     dayButtonTextSelected: { color: c.onPrimary },
     section: { gap: 10 },
     sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-    sectionTitle: { fontFamily: theme.font.body(600), fontSize: 15, color: c.text },
+    sectionTitle: {
+      fontFamily: theme.font.body(600),
+      fontSize: caps ? 13 : 15,
+      letterSpacing: caps ? 0.6 : 0,
+      color: theme.id === 'bloqueo' ? c.textSecondary : c.text,
+    },
     templatesButton: {
       minHeight: 36,
       paddingHorizontal: 12,
-      borderRadius: 10,
+      borderRadius: theme.id === 'indigo' ? 10 : theme.id === 'suizo' ? 0 : 999,
       backgroundColor: c.primarySoft,
+      borderWidth: theme.id === 'indigo' ? 0 : 1,
+      borderColor: c.borderStrong,
       flexDirection: 'row',
       alignItems: 'center',
       gap: 6,
     },
-    templatesText: { fontFamily: theme.font.body(600), fontSize: 14, color: c.primary },
+    templatesText: { fontFamily: theme.font.body(600), fontSize: 14, color: swiss ? c.text : c.primary },
     textArea: {
       ...field,
-      borderRadius: theme.radius.card,
-      paddingHorizontal: 16,
-      paddingVertical: 14,
+      ...fieldText,
+      borderRadius: swiss ? 0 : theme.id === 'bloqueo' ? 24 : theme.id === 'cristal' ? 18 : theme.radius.card,
+      paddingHorizontal: swiss ? 0 : 16,
+      paddingVertical: swiss ? 12 : 14,
       minHeight: 96,
       lineHeight: 22,
       textAlignVertical: 'top',
     },
-    counter: { alignSelf: 'flex-end', fontFamily: theme.font.body(400), fontSize: 12, color: c.textMuted },
-    chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-    chip: {
-      minHeight: 36,
-      maxWidth: '100%',
-      paddingLeft: 12,
-      paddingRight: 4,
-      borderRadius: theme.radius.chip,
-      borderWidth: 1,
-      borderColor: c.border,
-      backgroundColor: c.surface,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-    },
-    chipText: { fontFamily: theme.font.body(400), fontSize: 14, color: c.text, flexShrink: 1 },
+    counter: { alignSelf: 'flex-end', fontFamily: theme.font.body(swiss ? 600 : 400), fontSize: 12, color: c.textMuted },
+    chips: { flexDirection: swiss ? 'column' : 'row', flexWrap: 'wrap', gap: swiss ? 0 : 8 },
+    chip: swiss
+      ? {
+          minHeight: 48,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 6,
+          borderBottomWidth: 1,
+          borderBottomColor: c.border,
+        }
+      : {
+          minHeight: 36,
+          maxWidth: '100%',
+          paddingLeft: 12,
+          paddingRight: 4,
+          borderRadius: theme.radius.chip,
+          borderWidth: 1,
+          borderColor: c.border,
+          backgroundColor: c.surface,
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 6,
+        },
+    chipText: { fontFamily: theme.font.body(400), fontSize: swiss ? 15 : 14, color: c.text, flexShrink: 1 },
     chipRemove: {
-      width: 28,
-      height: 28,
+      width: swiss ? 44 : 28,
+      height: swiss ? 44 : 28,
       borderRadius: 14,
-      backgroundColor: c.surfaceMuted,
-      alignItems: 'center',
+      backgroundColor: swiss ? 'transparent' : c.surfaceMuted,
+      alignItems: swiss ? 'flex-end' : 'center',
       justifyContent: 'center',
     },
-    manualRow: { flexDirection: 'row', gap: 8, alignItems: 'center' },
-    input: { ...field, height: 48, paddingHorizontal: 14, borderRadius: theme.radius.input },
+    manualRow: { flexDirection: 'row', gap: swiss ? 0 : 8, alignItems: 'center', ...(swiss ? { borderWidth: 1, borderColor: c.borderStrong } : {}) },
+    input: {
+      ...(swiss ? { backgroundColor: 'transparent', borderWidth: 0 } : field),
+      ...fieldText,
+      height: 48,
+      paddingHorizontal: swiss ? 12 : 14,
+      borderRadius: theme.id === 'bloqueo' ? 999 : theme.radius.input,
+    },
     addButton: {
       width: 48,
       height: 48,
-      borderRadius: theme.radius.input,
-      backgroundColor: c.inverse,
+      borderRadius: theme.id === 'bloqueo' ? 999 : theme.radius.input,
+      backgroundColor: theme.id === 'indigo' ? c.inverse : c.primary,
       alignItems: 'center',
       justifyContent: 'center',
     },
     pickContacts: {
       minHeight: 44,
-      borderRadius: theme.radius.control,
-      borderWidth: 1,
-      borderStyle: 'dashed',
-      borderColor: c.borderDashed,
+      borderRadius: theme.id === 'bloqueo' ? 999 : theme.radius.control,
+      borderWidth: swiss ? 0 : 1,
+      borderBottomWidth: 1,
+      borderStyle: swiss ? 'solid' : 'dashed',
+      borderColor: swiss ? c.border : c.borderDashed,
       flexDirection: 'row',
       alignItems: 'center',
-      justifyContent: 'center',
+      justifyContent: swiss ? 'space-between' : 'center',
+      paddingHorizontal: swiss ? 0 : 0,
       gap: 8,
     },
     pickContactsText: { fontFamily: theme.font.body(600), fontSize: 14, color: c.text },
@@ -511,7 +563,7 @@ function createStyles(theme: Theme) {
       paddingHorizontal: SCREEN_PADDING_X,
       paddingTop: 16,
       backgroundColor: c.background,
-      borderTopWidth: 1,
+      borderTopWidth: swiss ? 0 : 1,
       borderTopColor: c.divider,
     },
   });

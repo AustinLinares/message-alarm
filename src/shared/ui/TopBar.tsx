@@ -19,12 +19,33 @@ export function TopBar({ title, onBack, subtle }: TopBarProps) {
   const navigation = useNavigation();
 
   return (
-    <View style={[styles.bar, { paddingTop: insets.top + 8 }]}>
+    <View
+      style={[
+        styles.bar,
+        { paddingTop: insets.top + 8 },
+        theme.ui.ruled && {
+          marginHorizontal: 20,
+          paddingHorizontal: 0,
+          borderBottomWidth: 1,
+          borderBottomColor: theme.color.borderStrong,
+        },
+      ]}
+    >
       <Pressable
         accessibilityRole="button"
         accessibilityLabel={t('a11y.back')}
         onPress={onBack ?? (() => navigation.goBack())}
-        style={styles.back}
+        style={[
+          styles.back,
+          theme.id === 'cristal' || theme.id === 'bloqueo'
+            ? {
+                borderRadius: 22,
+                backgroundColor: theme.id === 'bloqueo' ? theme.color.surface : 'transparent',
+                borderWidth: theme.id === 'bloqueo' ? 1 : 0,
+                borderColor: theme.color.border,
+              }
+            : null,
+        ]}
         hitSlop={4}
       >
         <ArrowLeft size={22} color={theme.color.text} strokeWidth={2} />
@@ -34,12 +55,14 @@ export function TopBar({ title, onBack, subtle }: TopBarProps) {
         numberOfLines={1}
         style={[
           styles.title,
-          subtle
-            ? { fontFamily: theme.font.body(600), fontSize: 16, color: theme.color.textSecondary }
-            : { fontFamily: theme.font.display(600), fontSize: 22, color: theme.color.text },
+          theme.ui.uppercase
+            ? { fontFamily: theme.font.heading(800), fontSize: 15, letterSpacing: 0.4, color: theme.color.text }
+            : subtle
+              ? { fontFamily: theme.font.body(600), fontSize: 16, color: theme.color.textSecondary }
+              : { fontFamily: theme.font.heading(600), fontSize: 22, color: theme.color.text },
         ]}
       >
-        {title}
+        {theme.ui.uppercase ? title.toUpperCase() : title}
       </Text>
     </View>
   );

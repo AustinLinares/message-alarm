@@ -5,6 +5,7 @@ import { useI18n } from '../../shared/i18n';
 import { MESSAGE_MAX_LENGTH, type Theme } from '../../shared/theme/themes';
 import { useTheme, useThemedStyles } from '../../shared/theme/ThemeProvider';
 import { PrimaryButton, SecondaryButton } from '../../shared/ui/Buttons';
+import { ScreenBackground } from '../../shared/ui/ScreenBackground';
 import type { MessageTemplate } from '../../shared/types';
 import { createTemplate, deleteTemplate, listTemplates, updateTemplate } from './repository';
 
@@ -67,11 +68,11 @@ export function TemplatePicker({ onSelect, onClose }: TemplatePickerProps) {
     ]);
   }
 
-  const container = [styles.container, { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 16 }];
+  const containerStyle = [styles.container, { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 16 }];
 
   if (mode.kind === 'form') {
     return (
-      <View style={container}>
+      <ScreenBackground style={containerStyle}>
         <Text style={styles.label}>{t('templates.name')}</Text>
         <TextInput
           style={styles.input}
@@ -94,12 +95,12 @@ export function TemplatePicker({ onSelect, onClose }: TemplatePickerProps) {
           <SecondaryButton label={t('common.cancel')} onPress={() => setMode({ kind: 'list' })} style={{ flex: 1, minHeight: 56 }} />
           <PrimaryButton label={t('common.save')} onPress={handleSaveTemplate} style={{ flex: 1 }} />
         </View>
-      </View>
+      </ScreenBackground>
     );
   }
 
   return (
-    <View style={container}>
+    <ScreenBackground style={containerStyle}>
       <FlatList
         data={templates}
         keyExtractor={(item) => item.id}
@@ -125,14 +126,14 @@ export function TemplatePicker({ onSelect, onClose }: TemplatePickerProps) {
         <SecondaryButton label={t('common.close')} onPress={onClose} style={{ flex: 1, minHeight: 56 }} />
         <PrimaryButton label={t('templates.new')} onPress={() => openForm(null)} style={{ flex: 1 }} />
       </View>
-    </View>
+    </ScreenBackground>
   );
 }
 
 function createStyles(theme: Theme) {
   const c = theme.color;
   return StyleSheet.create({
-    container: { flex: 1, backgroundColor: c.background, paddingHorizontal: 20 },
+    container: { paddingHorizontal: 20 },
     label: { fontFamily: theme.font.body(600), fontSize: 15, color: c.text, marginTop: 14 },
     input: {
       borderWidth: 1,

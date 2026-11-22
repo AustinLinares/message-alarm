@@ -7,6 +7,7 @@ import type { RootStackParamList } from '../../navigation/RootNavigator';
 import { useI18n } from '../../shared/i18n';
 import { SCREEN_PADDING_X, type Theme } from '../../shared/theme/themes';
 import { useAppSettings, useTheme, useThemedStyles } from '../../shared/theme/ThemeProvider';
+import { ScreenBackground } from '../../shared/ui/ScreenBackground';
 import { TopBar } from '../../shared/ui/TopBar';
 import { exportBackup, importBackup } from './backupService';
 
@@ -84,7 +85,7 @@ export function SettingsScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <ScreenBackground>
       <TopBar title={t('settings.title')} />
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.section}>
@@ -169,44 +170,73 @@ export function SettingsScreen() {
           </View>
         </View>
       </ScrollView>
-    </View>
+    </ScreenBackground>
   );
 }
 
 function createStyles(theme: Theme) {
   const c = theme.color;
+  const swiss = theme.ui.ruled;
   return StyleSheet.create({
-    container: { flex: 1, backgroundColor: c.background },
     content: { paddingHorizontal: SCREEN_PADDING_X, paddingTop: 12, paddingBottom: 40, gap: 26 },
     section: { gap: 10 },
     sectionTitle: {
-      marginHorizontal: 4,
-      fontFamily: theme.font.body(600),
+      marginHorizontal: swiss ? 0 : 4,
+      fontFamily: theme.font.body(theme.id === 'cristal' ? 500 : 600),
       fontSize: 13,
-      letterSpacing: 0.6,
+      letterSpacing: swiss ? 0.6 : theme.id === 'cristal' ? 1 : 0.6,
       textTransform: 'uppercase',
-      color: c.textMuted,
+      color: swiss ? c.text : c.textMuted,
+      paddingBottom: swiss ? 6 : 0,
+      borderBottomWidth: swiss ? 1 : 0,
+      borderBottomColor: c.borderStrong,
     },
-    card: { borderRadius: 18, backgroundColor: c.surface, overflow: 'hidden' },
-    note: { flexDirection: 'row', gap: 12, padding: 16 },
+    card: {
+      borderRadius: swiss ? 0 : theme.id === 'indigo' ? 18 : theme.radius.cardLarge,
+      backgroundColor: swiss ? 'transparent' : c.surface,
+      overflow: 'hidden',
+      borderWidth: swiss ? 0 : theme.ui.cardBorder,
+      borderColor: c.border,
+    },
+    note: { flexDirection: 'row', gap: 12, padding: swiss ? 0 : 16, paddingVertical: swiss ? 12 : 16 },
     noteText: { flex: 1, fontFamily: theme.font.body(400), fontSize: 14, lineHeight: 21, color: c.textSecondary },
-    row: { minHeight: 60, paddingHorizontal: 16, paddingVertical: 8, flexDirection: 'row', alignItems: 'center', gap: 14 },
+    row: {
+      minHeight: 60,
+      paddingHorizontal: swiss ? 0 : 16,
+      paddingVertical: 8,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 14,
+    },
     rowDivider: { borderBottomWidth: 1, borderBottomColor: c.divider },
-    rowIcon: { width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+    rowIcon: {
+      width: 36,
+      height: 36,
+      borderRadius: swiss ? 0 : theme.id === 'cristal' ? 12 : theme.id === 'bloqueo' ? 12 : 10,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: swiss ? 1 : 0,
+      borderColor: c.borderStrong,
+    },
     rowText: { flex: 1, gap: 2 },
-    rowTitle: { fontFamily: theme.font.body(600), fontSize: 15, color: c.text },
+    rowTitle: { fontFamily: theme.font.body(600), fontSize: swiss ? 16 : 15, color: c.text },
     rowSubtitle: { fontFamily: theme.font.body(400), fontSize: 13, color: c.textMuted },
-    batteryCard: { padding: 16, gap: 14 },
+    batteryCard: { padding: swiss ? 0 : 16, paddingVertical: 16, gap: 14 },
     batteryTop: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
     batteryText: { fontFamily: theme.font.body(400), fontSize: 14, lineHeight: 21, color: c.textSecondary },
     batteryButton: {
       minHeight: 48,
-      borderRadius: theme.radius.control,
-      backgroundColor: c.inverse,
+      borderRadius: theme.id === 'bloqueo' ? 999 : theme.id === 'cristal' ? 16 : theme.radius.control,
+      backgroundColor: theme.id === 'indigo' ? c.inverse : c.primary,
       alignItems: 'center',
       justifyContent: 'center',
       paddingHorizontal: 12,
     },
-    batteryButtonText: { fontFamily: theme.font.body(600), fontSize: 15, color: c.textOnInverse, textAlign: 'center' },
+    batteryButtonText: {
+      fontFamily: theme.font.body(600),
+      fontSize: 15,
+      color: theme.id === 'indigo' ? c.textOnInverse : c.onPrimary,
+      textAlign: 'center',
+    },
   });
 }

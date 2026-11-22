@@ -6,6 +6,7 @@ import { useI18n } from '../../shared/i18n';
 import { type Theme } from '../../shared/theme/themes';
 import { useTheme, useThemedStyles } from '../../shared/theme/ThemeProvider';
 import { PrimaryButton, SecondaryButton } from '../../shared/ui/Buttons';
+import { ScreenBackground } from '../../shared/ui/ScreenBackground';
 import * as Contacts from 'expo-contacts';
 
 export interface PickedContact {
@@ -114,7 +115,7 @@ export function ContactPicker({ onConfirm, onCancel }: ContactPickerProps) {
   }
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <ScreenBackground style={{ paddingTop: insets.top }}>
       <SectionList
         sections={sections}
         keyExtractor={(item) => item.id}
@@ -145,7 +146,7 @@ export function ContactPicker({ onConfirm, onCancel }: ContactPickerProps) {
           style={{ flex: 2 }}
         />
       </View>
-    </View>
+    </ScreenBackground>
   );
 }
 

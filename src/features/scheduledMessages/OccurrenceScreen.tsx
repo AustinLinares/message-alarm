@@ -11,6 +11,8 @@ import { useI18n } from '../../shared/i18n';
 import { scheduleSnooze } from '../../shared/notifications/scheduler';
 import { MESSAGE_MAX_LENGTH, type Theme } from '../../shared/theme/themes';
 import { useTheme, useThemedStyles } from '../../shared/theme/ThemeProvider';
+import { Clock } from '../../shared/ui/Clock';
+import { ScreenBackground } from '../../shared/ui/ScreenBackground';
 import type { Contact, MessageOccurrence, RecipientStatus, ScheduledMessage } from '../../shared/types';
 import { getContact } from '../contacts/repository';
 import { getOccurrence, setRecipientStatus } from './occurrenceRepository';
@@ -91,9 +93,9 @@ export function OccurrenceScreen({ route }: OccurrenceScreenProps) {
 
   if (!message || !occurrence) {
     return (
-      <View style={[styles.container, styles.center]}>
+      <ScreenBackground style={styles.center}>
         <Text style={styles.muted}>{t('common.loading')}</Text>
-      </View>
+      </ScreenBackground>
     );
   }
 
@@ -101,19 +103,37 @@ export function OccurrenceScreen({ route }: OccurrenceScreenProps) {
   const displayText = expanded || !isLong ? message.text : `${message.text.slice(0, MESSAGE_PREVIEW_LIMIT)}…`;
   const done = recipients.filter((row) => row.status === 'confirmed').length;
 
+  const upper = (text: string) => (theme.ui.uppercase ? text.toUpperCase() : text);
+
   return (
-    <View style={styles.container}>
-      <StatusBar style="light" />
+    <ScreenBackground>
+      <StatusBar style={theme.mode === 'dark' || theme.id === 'indigo' ? 'light' : 'dark'} />
+      {theme.ui.ruled && <View style={styles.swissCircle} />}
       <ScrollView
         contentContainerStyle={[styles.content, { paddingTop: insets.top + 40 }]}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.hero}>
-          <View style={styles.bell}>
-            <AlarmClock size={34} color={theme.color.highlight} />
-          </View>
-          <Text style={styles.heroLabel}>{t('alarm.time_to_send')}</Text>
-          <Text style={styles.clock}>{formatTime(new Date(occurrence.firedAt))}</Text>
+          {theme.ui.ruled ? null : theme.id === 'bloqueo' ? (
+            <View style={styles.pill}>
+              <AlarmClock size={16} color={theme.color.text} />
+              <Text style={styles.pillText}>{t('alarm.time_to_send')}</Text>
+            </View>
+          ) : (
+            <>
+              <View style={styles.bell}>
+                <AlarmClock size={34} color={theme.id === 'indigo' ? theme.color.highlight : theme.color.accent} />
+              </View>
+              <Text style={styles.heroLabel}>{upper(t('alarm.time_to_send'))}</Text>
+            </>
+          )}
+          {theme.ui.ruled && <Text style={styles.swissHeader}>{upper(t('alarm.time_to_send'))}</Text>}
+          <Clock
+            time={formatTime(new Date(occurrence.firedAt))}
+            size={theme.clock.sizeAlarm}
+            color={theme.color.textOnInverse}
+            letterSpacing={theme.id === 'indigo' ? -2 : undefined}
+          />
         </View>
 
         <View style={styles.card}>
@@ -135,7 +155,11 @@ export function OccurrenceScreen({ route }: OccurrenceScreenProps) {
         </View>
 
         <View style={styles.recipients}>
-          <Text style={styles.cardLabel}>{t('alarm.send_to_progress', { done, total: recipients.length })}</Text>
+          <Text style={styles.cardLabel}>
+            {theme.ui.ruled
+              ? `${upper(t('alarm.send_to_progress', { done, total: recipients.length }).split('·')[0].trim())} · ${done} / ${recipients.length}`
+              : t('alarm.send_to_progress', { done, total: recipients.length })}
+          </Text>
           {recipients.map(({ contact, status }) => (
             <View key={contact.id} style={styles.recipientRow}>
               <View style={styles.avatar}>
@@ -157,7 +181,7 @@ export function OccurrenceScreen({ route }: OccurrenceScreenProps) {
                   style={styles.opened}
                 >
                   <Check size={16} color={theme.color.success} strokeWidth={2.6} />
-                  <Text style={styles.openedText}>{t('alarm.opened')}</Text>
+                  <Text style={styles.openedText}>{upper(t('alarm.opened'))}</Text>
                 </Pressable>
               ) : (
                 <Pressable
@@ -184,63 +208,100 @@ export function OccurrenceScreen({ route }: OccurrenceScreenProps) {
           onPress={() => navigation.popToTop()}
           style={[styles.footerButton, styles.done]}
         >
-          <Text style={styles.footerText}>{t('alarm.done')}</Text>
+          <Text style={[styles.footerText, styles.doneText]}>{t('alarm.done')}</Text>
         </Pressable>
       </View>
-    </View>
+    </ScreenBackground>
   );
 }
 
 function createStyles(theme: Theme) {
   const c = theme.color;
+  const swiss = theme.ui.ruled;
+  const lock = theme.id === 'bloqueo';
+  const cardBox = { borderWidth: theme.ui.cardBorder, borderColor: c.inverseBorder };
   return StyleSheet.create({
-    container: { flex: 1, backgroundColor: c.inverse },
     center: { alignItems: 'center', justifyContent: 'center' },
     muted: { fontFamily: theme.font.body(400), color: c.textOnInverseMuted },
-    content: { paddingHorizontal: 24, paddingBottom: 24, gap: 28 },
-    hero: { alignItems: 'center', gap: 12 },
+    content: { paddingHorizontal: swiss ? 20 : 24, paddingBottom: 24, gap: swiss ? 16 : 28, alignItems: lock ? 'stretch' : undefined },
+    swissCircle: { position: 'absolute', right: -70, top: -70, width: 220, height: 220, borderRadius: 110, backgroundColor: c.accent },
+    swissHeader: {
+      fontFamily: theme.font.heading(800),
+      fontSize: 15,
+      letterSpacing: 0.4,
+      color: c.textOnInverse,
+      paddingBottom: 12,
+      marginRight: 120,
+      borderBottomWidth: 1,
+      borderBottomColor: c.inverseBorder,
+      alignSelf: 'stretch',
+    },
+    hero: { alignItems: swiss ? 'flex-start' : 'center', gap: swiss ? 0 : 12 },
     bell: {
-      width: 72,
-      height: 72,
-      borderRadius: 36,
+      width: 68,
+      height: 68,
+      borderRadius: 34,
       backgroundColor: c.inverseChip,
       alignItems: 'center',
       justifyContent: 'center',
       marginBottom: 10,
       borderWidth: 10,
-      borderColor: 'rgba(245,184,61,0.12)',
+      borderColor: theme.id === 'cristal' ? 'rgba(94,230,240,0.08)' : 'rgba(245,184,61,0.12)',
     },
+    pill: {
+      height: 32,
+      paddingHorizontal: 14,
+      borderRadius: 16,
+      backgroundColor: c.inverseRaised,
+      ...cardBox,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    pillText: { fontFamily: theme.font.body(600), fontSize: 13, color: c.textOnInverse },
     heroLabel: {
-      fontFamily: theme.font.body(600),
-      fontSize: 14,
-      letterSpacing: 0.6,
-      textTransform: 'uppercase',
+      fontFamily: theme.font.body(theme.id === 'indigo' ? 600 : 400),
+      fontSize: theme.id === 'indigo' ? 14 : 15,
+      letterSpacing: theme.id === 'indigo' ? 0.6 : 0,
+      textTransform: theme.id === 'indigo' ? 'uppercase' : 'none',
       color: c.textOnInverseMuted,
       textAlign: 'center',
     },
-    clock: {
-      fontFamily: theme.font.display(theme.clock.weight),
-      fontSize: theme.clock.sizeAlarm,
-      letterSpacing: -2,
-      lineHeight: theme.clock.sizeAlarm + 4,
-      color: c.textOnInverse,
+    card: {
+      padding: swiss ? 0 : 18,
+      paddingVertical: swiss ? 8 : 18,
+      borderRadius: swiss ? 0 : theme.id === 'indigo' ? 18 : 24,
+      backgroundColor: swiss ? 'transparent' : c.inverseRaised,
+      gap: 10,
+      ...(swiss ? { borderBottomWidth: 1, borderBottomColor: c.inverseBorder } : cardBox),
     },
-    card: { padding: 18, borderRadius: 18, backgroundColor: c.inverseRaised, gap: 10 },
-    cardLabel: { fontFamily: theme.font.body(400), fontSize: 13, color: c.textOnInverseMuted },
+    cardLabel: {
+      fontFamily: theme.font.body(swiss ? 600 : 400),
+      fontSize: 13,
+      letterSpacing: swiss ? 0.6 : 0,
+      color: swiss ? c.textOnInverse : c.textOnInverseMuted,
+    },
     messageText: { fontFamily: theme.font.body(400), fontSize: 16, lineHeight: 24, color: c.textOnInverse },
     messageActions: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 4 },
     link: { minHeight: 44, justifyContent: 'center', paddingRight: 14 },
-    linkText: { fontFamily: theme.font.body(600), fontSize: 14, color: c.highlight },
-    recipients: { gap: 8 },
+    linkText: {
+      fontFamily: theme.font.body(600),
+      fontSize: 14,
+      color: swiss ? c.textOnInverse : theme.id === 'cristal' ? c.primary : theme.id === 'bloqueo' ? c.textOnInverse : c.highlight,
+      textDecorationLine: swiss || lock ? 'underline' : 'none',
+    },
+    recipients: { gap: swiss ? 0 : 8 },
     recipientRow: {
       flexDirection: 'row',
       alignItems: 'center',
       gap: 12,
-      paddingVertical: 8,
-      paddingLeft: 12,
-      paddingRight: 8,
-      borderRadius: 14,
-      backgroundColor: c.inverseRaised,
+      paddingVertical: swiss ? 8 : 8,
+      minHeight: swiss ? 60 : undefined,
+      paddingLeft: swiss ? 0 : 12,
+      paddingRight: swiss ? 0 : 8,
+      borderRadius: swiss ? 0 : lock ? 22 : theme.id === 'cristal' ? 18 : 14,
+      backgroundColor: swiss ? 'transparent' : c.inverseRaised,
+      ...(swiss ? { borderBottomWidth: 1, borderBottomColor: c.border } : cardBox),
     },
     avatar: {
       width: 36,
@@ -249,15 +310,16 @@ function createStyles(theme: Theme) {
       backgroundColor: c.inverseChip,
       alignItems: 'center',
       justifyContent: 'center',
+      display: swiss ? 'none' : 'flex',
     },
-    avatarText: { fontFamily: theme.font.body(700), fontSize: 14, color: '#E4E5F1' },
+    avatarText: { fontFamily: theme.font.body(700), fontSize: 14, color: c.textOnInverse },
     recipientInfo: { flex: 1, minWidth: 0 },
-    recipientName: { fontFamily: theme.font.body(600), fontSize: 15, color: c.textOnInverse },
+    recipientName: { fontFamily: theme.font.body(600), fontSize: swiss ? 16 : 15, color: c.textOnInverse },
     recipientPhone: { fontFamily: theme.font.body(400), fontSize: 13, color: c.textOnInverseMuted },
     openChat: {
       minHeight: 44,
       paddingHorizontal: 14,
-      borderRadius: theme.radius.control,
+      borderRadius: lock ? 999 : swiss ? 0 : theme.id === 'cristal' ? 14 : theme.radius.control,
       backgroundColor: c.highlight,
       flexDirection: 'row',
       alignItems: 'center',
@@ -265,11 +327,30 @@ function createStyles(theme: Theme) {
     },
     openChatText: { fontFamily: theme.font.body(700), fontSize: 14, color: c.onHighlight },
     opened: { minHeight: 44, paddingHorizontal: 12, flexDirection: 'row', alignItems: 'center', gap: 6 },
-    openedText: { fontFamily: theme.font.body(600), fontSize: 14, color: c.success },
-    footer: { flexDirection: 'row', gap: 10, paddingHorizontal: 24, paddingTop: 12 },
-    footerButton: { flex: 1, minHeight: 52, borderRadius: 14, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 8 },
-    snooze: { borderWidth: 1, borderColor: c.inverseBorder },
-    done: { backgroundColor: c.inverseChip },
+    openedText: { fontFamily: theme.font.body(600), fontSize: swiss ? 13 : 14, color: c.success },
+    footer: {
+      flexDirection: 'row',
+      gap: swiss ? 0 : 10,
+      marginHorizontal: swiss ? 20 : 0,
+      paddingHorizontal: swiss ? 0 : 24,
+      paddingTop: swiss ? 0 : 12,
+      ...(swiss ? { borderWidth: 1, borderColor: c.inverseBorder } : {}),
+    },
+    footerButton: {
+      flex: 1,
+      minHeight: swiss ? 56 : lock ? 54 : 52,
+      borderRadius: swiss ? 0 : lock ? 999 : theme.id === 'cristal' ? 16 : 14,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 8,
+    },
+    snooze: swiss
+      ? {}
+      : { borderWidth: 1, borderColor: c.inverseBorder, backgroundColor: theme.id === 'indigo' ? 'transparent' : c.inverseRaised },
+    done: swiss
+      ? { borderLeftWidth: 1, borderLeftColor: c.inverseBorder }
+      : { backgroundColor: lock ? c.primary : c.inverseChip },
     footerText: { fontFamily: theme.font.body(600), fontSize: 15, color: c.textOnInverse, textAlign: 'center' },
+    doneText: { color: lock ? c.onPrimary : c.textOnInverse },
   });
 }

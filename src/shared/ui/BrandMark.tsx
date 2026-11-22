@@ -1,3 +1,4 @@
+import type { Theme } from '../theme/themes';
 import Svg, { Circle, G, Path, Rect } from 'react-native-svg';
 
 interface BrandMarkProps {
@@ -23,4 +24,13 @@ export function BrandMark({ size, body = '#4338CA', bells = '#F5B83D', lines = '
       </G>
     </Svg>
   );
+}
+
+// Mark colours for the small logo tile (a `primary` square) in each theme.
+export function brandColors(theme: Theme) {
+  return {
+    body: theme.color.onPrimary,
+    bells: theme.id === 'cristal' ? '#FFFFFF' : theme.color.accent,
+    lines: theme.color.primary,
+  };
 }

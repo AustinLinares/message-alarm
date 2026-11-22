@@ -29,6 +29,7 @@ export interface I18n {
   t: (key: string, params?: Record<string, string | number>) => string;
   formatTime: (date: Date) => string;
   formatDay: (date: Date) => string; // "sáb 21 nov" / "Sat, Nov 21"
+  formatLongDay: (date: Date) => string; // "sábado, 21 de noviembre"
   weekdayShort: (day: number) => string; // 0 = Sunday
 }
 
@@ -48,12 +49,14 @@ export function I18nProvider({ children }: { children: ReactNode }) {
       ...(typeof uses24h === 'boolean' ? { hour12: !uses24h } : {}),
     });
     const dayFormat = new Intl.DateTimeFormat(tag, { weekday: 'short', day: 'numeric', month: 'short' });
+    const longDayFormat = new Intl.DateTimeFormat(tag, { weekday: 'long', day: 'numeric', month: 'long' });
     const weekdayFormat = new Intl.DateTimeFormat(tag, { weekday: 'narrow' });
     return {
       locale,
       t: (key, params) => translate(key, params, locale),
       formatTime: (date) => timeFormat.format(date),
       formatDay: (date) => dayFormat.format(date).replace(/[.,]/g, '').replace(/\s+/g, ' ').trim(),
+      formatLongDay: (date) => longDayFormat.format(date),
       // 2023-01-01 was a Sunday.
       weekdayShort: (day) => weekdayFormat.format(new Date(2023, 0, 1 + day)),
     };

@@ -1,5 +1,6 @@
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
+import * as SystemUI from 'expo-system-ui';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -20,6 +21,11 @@ function Root() {
   useEffect(() => {
     void initNotifications();
   }, []);
+
+  // Keeps the window behind the app (keyboard, overscroll) in the theme's colour.
+  useEffect(() => {
+    void SystemUI.setBackgroundColorAsync(theme.color.background);
+  }, [theme.color.background]);
 
   useEffect(() => {
     if (fontsSettled && ready) void SplashScreen.hideAsync();

@@ -4,6 +4,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useI18n } from '../../shared/i18n';
 import { GRADIENT_IDS, GRADIENTS, SCREEN_PADDING_X, THEME_IDS, type Theme } from '../../shared/theme/themes';
 import { useAppSettings, useTheme, useThemedStyles } from '../../shared/theme/ThemeProvider';
+import { ScreenBackground } from '../../shared/ui/ScreenBackground';
 import { TopBar } from '../../shared/ui/TopBar';
 import { Toggle } from '../../shared/ui/Toggle';
 import { ThemePreview } from './ThemePreview';
@@ -15,7 +16,7 @@ export function AppearanceScreen() {
   const { settings, updateSettings } = useAppSettings();
 
   return (
-    <View style={styles.container}>
+    <ScreenBackground>
       <TopBar title={t('appearance.title')} />
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.intro}>{t('appearance.intro')}</Text>
@@ -85,7 +86,7 @@ export function AppearanceScreen() {
           />
         </View>
       </ScrollView>
-    </View>
+    </ScreenBackground>
   );
 }
 
@@ -104,7 +105,6 @@ function GradientSwatch({ colors }: { colors: [string, string, ...string[]] }) {
 function createStyles(theme: Theme) {
   const c = theme.color;
   return StyleSheet.create({
-    container: { flex: 1, backgroundColor: c.background },
     content: { paddingHorizontal: SCREEN_PADDING_X, paddingTop: 8, paddingBottom: 40, gap: 14 },
     intro: { marginHorizontal: 4, fontFamily: theme.font.body(400), fontSize: 14, lineHeight: 21, color: c.textSecondary },
     grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
@@ -112,7 +112,7 @@ function createStyles(theme: Theme) {
       width: '48%',
       flexGrow: 1,
       padding: 8,
-      borderRadius: 20,
+      borderRadius: theme.id === 'suizo' ? 0 : 20,
       borderWidth: 2,
       backgroundColor: c.surface,
     },
@@ -127,7 +127,15 @@ function createStyles(theme: Theme) {
       minHeight: 44,
     },
     themeName: { flex: 1, fontFamily: theme.font.body(600), fontSize: 14, color: c.text },
-    panel: { marginTop: 10, padding: 16, borderRadius: 18, backgroundColor: c.surface, gap: 12 },
+    panel: {
+      marginTop: 10,
+      padding: 16,
+      borderRadius: theme.id === 'indigo' ? 18 : theme.radius.cardLarge,
+      backgroundColor: c.surface,
+      borderWidth: theme.ui.cardBorder,
+      borderColor: c.border,
+      gap: 12,
+    },
     panelRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
     panelText: { flex: 1, gap: 2 },
     panelTitle: { fontFamily: theme.font.body(600), fontSize: 15, color: c.text },
