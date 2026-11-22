@@ -24,7 +24,12 @@ export function ActionMenu({ visible, items, onClose }: ActionMenuProps) {
         <View
           style={[
             styles.sheet,
-            { backgroundColor: theme.color.surface, borderRadius: theme.radius.cardLarge },
+            {
+              backgroundColor: theme.color.sheet,
+              borderRadius: theme.radius.cardLarge,
+              borderWidth: theme.ui.cardBorder,
+              borderColor: theme.color.borderStrong,
+            },
           ]}
         >
           {items.map((item, index) => (

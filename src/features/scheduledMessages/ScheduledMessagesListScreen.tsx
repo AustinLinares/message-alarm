@@ -2,7 +2,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Bell, Copy, EllipsisVertical, Pause, Pencil, Play, Plus, Send, Settings, Trash2 } from 'lucide-react-native';
 import { useCallback, useMemo, useState } from 'react';
-import { Alert, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { RootStackParamList } from '../../navigation/RootNavigator';
 import { useI18n, type I18n } from '../../shared/i18n';
@@ -15,6 +15,7 @@ import { BrandMark, brandColors } from '../../shared/ui/BrandMark';
 import { Clock } from '../../shared/ui/Clock';
 import { ScreenBackground } from '../../shared/ui/ScreenBackground';
 import { PrimaryButton } from '../../shared/ui/Buttons';
+import { useDialog } from '../../shared/ui/Dialog';
 import { listContacts } from '../contacts/repository';
 import { startOccurrenceNow } from './alarmHandler';
 import { listOccurrencesForMessage } from './occurrenceRepository';
@@ -87,6 +88,7 @@ export function ScheduledMessagesListScreen() {
   const i18n = useI18n();
   const { t } = i18n;
   const insets = useSafeAreaInsets();
+  const dialog = useDialog();
   const [items, setItems] = useState<Item[]>([]);
   const [filter, setFilter] = useState<Filter>('all');
   const [menuFor, setMenuFor] = useState<Item | null>(null);
@@ -149,17 +151,21 @@ export function ScheduledMessagesListScreen() {
   }
 
   function handleDelete(item: Item) {
-    Alert.alert(t('home.delete_title'), t('home.delete_body'), [
-      { text: t('common.cancel'), style: 'cancel' },
-      {
-        text: t('common.delete'),
-        style: 'destructive',
-        onPress: async () => {
-          await deleteScheduledMessage(item.message.id);
-          void load();
+    dialog.show({
+      title: t('home.delete_title'),
+      message: t('home.delete_body'),
+      actions: [
+        { label: t('common.cancel'), style: 'cancel' },
+        {
+          label: t('common.delete'),
+          style: 'destructive',
+          onPress: async () => {
+            await deleteScheduledMessage(item.message.id);
+            void load();
+          },
         },
-      },
-    ]);
+      ],
+    });
   }
 
   const isLock = theme.id === 'bloqueo';
@@ -316,7 +322,14 @@ export function ScheduledMessagesListScreen() {
               onPress={() => setFilter(value)}
               style={[styles.filter, selected && styles.filterSelected]}
             >
-              <Text style={[styles.filterText, selected && styles.filterTextSelected]}>{t(FILTER_KEYS[value])}</Text>
+              <Text
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                minimumFontScale={0.75}
+                style={[styles.filterText, selected && styles.filterTextSelected]}
+              >
+                {t(FILTER_KEYS[value])}
+              </Text>
             </Pressable>
           );
         })}
@@ -567,19 +580,21 @@ function createStyles(theme: Theme) {
       color: c.text,
     },
     listCount: { fontFamily: theme.font.body(400), fontSize: swiss ? 13 : 14, color: c.textMuted },
+    // One row of equal-width pills that never wraps; labels shrink instead.
     filters: {
       flexDirection: 'row',
-      flexWrap: swiss ? 'nowrap' : 'wrap',
-      gap: swiss ? 0 : 8,
+      flexWrap: 'nowrap',
+      gap: swiss ? 0 : 6,
       marginHorizontal: SCREEN_PADDING_X,
       marginBottom: 12,
       borderWidth: swiss ? 1 : 0,
       borderColor: c.borderStrong,
     },
     filter: {
-      flex: swiss ? 1 : 0,
+      flex: 1,
+      minWidth: 0,
       minHeight: swiss ? 40 : 36,
-      paddingHorizontal: swiss ? 4 : 14,
+      paddingHorizontal: 6,
       borderRadius: theme.radius.chip,
       borderWidth: swiss ? 0 : 1,
       borderColor: c.border,
@@ -588,7 +603,7 @@ function createStyles(theme: Theme) {
       justifyContent: 'center',
     },
     filterSelected: { backgroundColor: c.selected, borderColor: c.selected },
-    filterText: { fontFamily: theme.font.body(500), fontSize: swiss ? 13 : 14, color: c.text },
+    filterText: { fontFamily: theme.font.body(500), fontSize: 13, color: c.text, textAlign: 'center' },
     filterTextSelected: { fontFamily: theme.font.body(600), color: c.onSelected },
     row: {
       flexDirection: 'row',

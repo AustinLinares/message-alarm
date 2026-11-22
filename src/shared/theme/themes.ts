@@ -21,6 +21,7 @@ export interface Theme {
     background: string;
     surface: string; // cards: white / transparent hairline / glass / frost
     surfaceMuted: string;
+    sheet: string; // opaque surface for dialogs and menus floating above a dimmed screen
     // Palette of the alarm screen. Indigo flips to a dark screen; the dark
     // themes simply keep their own look.
     inverse: string;
@@ -117,6 +118,7 @@ const indigo: Theme = {
     background: ix.color.background,
     surface: ix.color.surface,
     surfaceMuted: ix.color.surfaceMuted,
+    sheet: '#FFFFFF',
     inverse: ix.color.surfaceInverse,
     inverseRaised: ix.color.surfaceInverseRaised,
     // Not in tokens.json: read off the Indigo mockups (.dc.html).
@@ -185,6 +187,7 @@ const suizo: Theme = {
     background: sz.color.background,
     surface: sz.color.surface,
     surfaceMuted: '#F2F2F2',
+    sheet: '#FFFFFF',
     inverse: sz.color.background,
     inverseRaised: sz.color.surface,
     inverseChip: '#F2F2F2',
@@ -251,6 +254,7 @@ const cristal: Theme = {
     background: cr.color.background,
     surface: cr.color.glass,
     surfaceMuted: 'rgba(255,255,255,0.06)',
+    sheet: '#161C3C',
     inverse: cr.color.background,
     inverseRaised: cr.color.glass,
     inverseChip: cr.color.glassStrong,
@@ -317,6 +321,7 @@ const bloqueo: Theme = {
     background: bq.color.background,
     surface: bq.color.frost,
     surfaceMuted: bq.color.frost,
+    sheet: '#1D1924',
     inverse: bq.color.background,
     inverseRaised: bq.color.frost,
     inverseChip: 'rgba(255,255,255,0.14)',

@@ -2,11 +2,12 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { BatteryWarning, ChevronRight, Download, Info, Palette, Upload } from 'lucide-react-native';
 import { useState, type ReactNode } from 'react';
-import { Alert, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { RootStackParamList } from '../../navigation/RootNavigator';
 import { useI18n } from '../../shared/i18n';
 import { SCREEN_PADDING_X, type Theme } from '../../shared/theme/themes';
 import { useAppSettings, useTheme, useThemedStyles } from '../../shared/theme/ThemeProvider';
+import { useDialog } from '../../shared/ui/Dialog';
 import { ScreenBackground } from '../../shared/ui/ScreenBackground';
 import { TopBar } from '../../shared/ui/TopBar';
 import { exportBackup, importBackup } from './backupService';
@@ -27,6 +28,7 @@ export function SettingsScreen() {
   const styles = useThemedStyles(createStyles);
   const { t } = useI18n();
   const { reloadSettings, settings } = useAppSettings();
+  const dialog = useDialog();
   const [working, setWorking] = useState(false);
 
   async function handleExport() {
@@ -34,17 +36,20 @@ export function SettingsScreen() {
     try {
       await exportBackup();
     } catch {
-      Alert.alert(t('settings.export_error_title'), t('settings.export_error_body'));
+      dialog.show({ title: t('settings.export_error_title'), message: t('settings.export_error_body') });
     } finally {
       setWorking(false);
     }
   }
 
   function handleImport() {
-    Alert.alert(t('settings.import'), t('settings.import_confirm_body'), [
-      { text: t('common.cancel'), style: 'cancel' },
+    dialog.show({
+      title: t('settings.import'),
+      message: t('settings.import_confirm_body'),
+      actions: [
+      { label: t('common.cancel'), style: 'cancel' },
       {
-        text: t('settings.import'),
+        label: t('settings.import'),
         style: 'destructive',
         onPress: async () => {
           setWorking(true);
@@ -52,18 +57,19 @@ export function SettingsScreen() {
             const result = await importBackup();
             if (result === 'imported') {
               await reloadSettings();
-              Alert.alert(t('common.ok'), t('settings.import_ok_body'));
+              dialog.show({ title: t('common.ok'), message: t('settings.import_ok_body') });
             } else if (result === 'invalid') {
-              Alert.alert(t('settings.import_invalid_title'), t('settings.import_invalid_body'));
+              dialog.show({ title: t('settings.import_invalid_title'), message: t('settings.import_invalid_body') });
             }
           } catch {
-            Alert.alert(t('settings.import_error_title'), t('settings.import_error_body'));
+            dialog.show({ title: t('settings.import_error_title'), message: t('settings.import_error_body') });
           } finally {
             setWorking(false);
           }
         },
       },
-    ]);
+      ],
+    });
   }
 
   function Row({ icon, iconBackground, title, subtitle, onPress, disabled, last }: SettingsRowProps) {

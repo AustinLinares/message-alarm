@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Alert, FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useI18n } from '../../shared/i18n';
 import { MESSAGE_MAX_LENGTH, type Theme } from '../../shared/theme/themes';
 import { useTheme, useThemedStyles } from '../../shared/theme/ThemeProvider';
 import { PrimaryButton, SecondaryButton } from '../../shared/ui/Buttons';
+import { useDialog } from '../../shared/ui/Dialog';
 import { ScreenBackground } from '../../shared/ui/ScreenBackground';
 import type { MessageTemplate } from '../../shared/types';
 import { createTemplate, deleteTemplate, listTemplates, updateTemplate } from './repository';
@@ -21,6 +22,7 @@ export function TemplatePicker({ onSelect, onClose }: TemplatePickerProps) {
   const styles = useThemedStyles(createStyles);
   const { t } = useI18n();
   const insets = useSafeAreaInsets();
+  const dialog = useDialog();
   const [templates, setTemplates] = useState<MessageTemplate[]>([]);
   const [mode, setMode] = useState<Mode>({ kind: 'list' });
   const [name, setName] = useState('');
@@ -42,7 +44,7 @@ export function TemplatePicker({ onSelect, onClose }: TemplatePickerProps) {
 
   async function handleSaveTemplate() {
     if (!name.trim() || !text.trim()) {
-      Alert.alert(t('templates.missing_title'), t('templates.missing_body'));
+      dialog.show({ title: t('templates.missing_title'), message: t('templates.missing_body') });
       return;
     }
     if (mode.kind === 'form' && mode.editing) {
@@ -55,17 +57,21 @@ export function TemplatePicker({ onSelect, onClose }: TemplatePickerProps) {
   }
 
   function handleDeleteTemplate(template: MessageTemplate) {
-    Alert.alert(t('templates.delete_title'), t('templates.delete_body', { name: template.name }), [
-      { text: t('common.cancel'), style: 'cancel' },
+    dialog.show({
+      title: t('templates.delete_title'),
+      message: t('templates.delete_body', { name: template.name }),
+      actions: [
+      { label: t('common.cancel'), style: 'cancel' },
       {
-        text: t('common.delete'),
+        label: t('common.delete'),
         style: 'destructive',
         onPress: async () => {
           await deleteTemplate(template.id);
           await refresh();
         },
       },
-    ]);
+      ],
+    });
   }
 
   const containerStyle = [styles.container, { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 16 }];

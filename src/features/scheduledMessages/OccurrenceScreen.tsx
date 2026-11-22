@@ -4,7 +4,7 @@ import * as Clipboard from 'expo-clipboard';
 import { StatusBar } from 'expo-status-bar';
 import { AlarmClock, Check, ExternalLink } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
-import { Alert, Linking, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
+import { Linking, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { RootStackParamList } from '../../navigation/RootNavigator';
 import { useI18n } from '../../shared/i18n';
@@ -12,6 +12,7 @@ import { scheduleSnooze } from '../../shared/notifications/scheduler';
 import { MESSAGE_MAX_LENGTH, type Theme } from '../../shared/theme/themes';
 import { useTheme, useThemedStyles } from '../../shared/theme/ThemeProvider';
 import { Clock } from '../../shared/ui/Clock';
+import { useDialog } from '../../shared/ui/Dialog';
 import { ScreenBackground } from '../../shared/ui/ScreenBackground';
 import type { Contact, MessageOccurrence, RecipientStatus, ScheduledMessage } from '../../shared/types';
 import { getContact } from '../contacts/repository';
@@ -41,6 +42,7 @@ export function OccurrenceScreen({ route }: OccurrenceScreenProps) {
   const styles = useThemedStyles(createStyles);
   const { t, formatTime } = useI18n();
   const insets = useSafeAreaInsets();
+  const dialog = useDialog();
   const [message, setMessage] = useState<ScheduledMessage | null>(null);
   const [occurrence, setOccurrence] = useState<MessageOccurrence | null>(null);
   const [recipients, setRecipients] = useState<RecipientRow[]>([]);
@@ -77,7 +79,7 @@ export function OccurrenceScreen({ route }: OccurrenceScreenProps) {
   async function handleCopy() {
     if (!message) return;
     await Clipboard.setStringAsync(message.text);
-    Alert.alert(t('occurrence.copied_title'), t('occurrence.copied_body'));
+    dialog.show({ title: t('occurrence.copied_title'), message: t('occurrence.copied_body') });
   }
 
   async function handleShare() {

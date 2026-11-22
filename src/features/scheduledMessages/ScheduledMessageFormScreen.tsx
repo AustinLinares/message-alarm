@@ -3,7 +3,7 @@ import { AlarmClock, Calendar, LayoutGrid, Plus, UserPlus, X } from 'lucide-reac
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useEffect, useState } from 'react';
-import { Alert, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ContactPicker, type PickedContact } from '../contacts/ContactPicker';
 import { createContact, getContact } from '../contacts/repository';
@@ -14,6 +14,7 @@ import { computeNextOccurrence } from '../../shared/notifications/computeNextOcc
 import { MESSAGE_MAX_LENGTH, SCREEN_PADDING_X, type Theme } from '../../shared/theme/themes';
 import { useTheme, useThemedStyles } from '../../shared/theme/ThemeProvider';
 import { PrimaryButton } from '../../shared/ui/Buttons';
+import { DialogProvider, useDialog } from '../../shared/ui/Dialog';
 import { Clock } from '../../shared/ui/Clock';
 import { ScreenBackground } from '../../shared/ui/ScreenBackground';
 import { TopBar } from '../../shared/ui/TopBar';
@@ -50,6 +51,7 @@ export function ScheduledMessageFormScreen() {
   const theme = useTheme();
   const styles = useThemedStyles(createStyles);
   const insets = useSafeAreaInsets();
+  const dialog = useDialog();
   const i18n = useI18n();
   const { t } = i18n;
 
@@ -133,15 +135,15 @@ export function ScheduledMessageFormScreen() {
 
   async function handleSave() {
     if (!text.trim()) {
-      Alert.alert(t('compose.missing_message_title'), t('compose.missing_message_body'));
+      dialog.show({ title: t('compose.missing_message_title'), message: t('compose.missing_message_body') });
       return;
     }
     if (recipients.length === 0) {
-      Alert.alert(t('compose.missing_recipients_title'), t('compose.missing_recipients_body'));
+      dialog.show({ title: t('compose.missing_recipients_title'), message: t('compose.missing_recipients_body') });
       return;
     }
     if (recurrenceType === 'weekly' && daysOfWeek.length === 0) {
-      Alert.alert(t('compose.missing_days_title'), t('compose.missing_days_body'));
+      dialog.show({ title: t('compose.missing_days_title'), message: t('compose.missing_days_body') });
       return;
     }
 
@@ -258,6 +260,9 @@ export function ScheduledMessageFormScreen() {
           <DateTimePicker
             value={startAt}
             mode="date"
+            themeVariant={theme.mode}
+            positiveButton={{ label: t('common.ok'), textColor: theme.color.primary }}
+            negativeButton={{ label: t('common.cancel'), textColor: theme.color.textMuted }}
             onChange={(_event, selected) => {
               setShowDatePicker(false);
               if (selected) setStartAt((prev) => mergeDate(prev, selected));
@@ -268,6 +273,9 @@ export function ScheduledMessageFormScreen() {
           <DateTimePicker
             value={startAt}
             mode="time"
+            themeVariant={theme.mode}
+            positiveButton={{ label: t('common.ok'), textColor: theme.color.primary }}
+            negativeButton={{ label: t('common.cancel'), textColor: theme.color.textMuted }}
             onChange={(_event, selected) => {
               setShowTimePicker(false);
               if (selected) setStartAt((prev) => mergeTime(prev, selected));
@@ -322,15 +330,15 @@ export function ScheduledMessageFormScreen() {
               ))}
             </View>
           )}
+          <TextInput
+            style={[styles.input, styles.nameInput]}
+            accessibilityLabel={t('compose.name_optional')}
+            placeholder={t('compose.name_optional')}
+            placeholderTextColor={theme.color.textMuted}
+            value={manualName}
+            onChangeText={setManualName}
+          />
           <View style={styles.manualRow}>
-            <TextInput
-              style={[styles.input, { flex: 1 }]}
-              accessibilityLabel={t('compose.name_optional')}
-              placeholder={t('compose.name_optional')}
-              placeholderTextColor={theme.color.textMuted}
-              value={manualName}
-              onChangeText={setManualName}
-            />
             <TextInput
               style={[styles.input, { flex: 1 }]}
               accessibilityLabel={t('compose.number')}
@@ -366,10 +374,14 @@ export function ScheduledMessageFormScreen() {
       </View>
 
       <Modal visible={showContactPicker} animationType="slide" onRequestClose={() => setShowContactPicker(false)}>
-        <ContactPicker onConfirm={handleContactsPicked} onCancel={() => setShowContactPicker(false)} />
+        <DialogProvider>
+          <ContactPicker onConfirm={handleContactsPicked} onCancel={() => setShowContactPicker(false)} />
+        </DialogProvider>
       </Modal>
       <Modal visible={showTemplatePicker} animationType="slide" onRequestClose={() => setShowTemplatePicker(false)}>
-        <TemplatePicker onSelect={handleTemplateSelected} onClose={() => setShowTemplatePicker(false)} />
+        <DialogProvider>
+          <TemplatePicker onSelect={handleTemplateSelected} onClose={() => setShowTemplatePicker(false)} />
+        </DialogProvider>
       </Modal>
     </ScreenBackground>
   );
@@ -526,6 +538,7 @@ function createStyles(theme: Theme) {
       justifyContent: 'center',
     },
     manualRow: { flexDirection: 'row', gap: swiss ? 0 : 8, alignItems: 'center', ...(swiss ? { borderWidth: 1, borderColor: c.borderStrong } : {}) },
+    nameInput: swiss ? { borderWidth: 1, borderColor: c.borderStrong } : {},
     input: {
       ...(swiss ? { backgroundColor: 'transparent', borderWidth: 0 } : field),
       ...fieldText,

@@ -52,6 +52,12 @@ export const APP_STRINGS: Record<string, StringEntry> = {
   'compose.missing_days_title': { es: 'Falta la repetición', en: 'Repeat days missing' },
   'compose.missing_days_body': { es: 'Elige al menos un día de la semana.', en: 'Pick at least one day of the week.' },
 
+  'contacts.error': {
+    es: 'No pudimos cargar tus contactos. Inténtalo de nuevo.',
+    en: "We couldn't load your contacts. Please try again.",
+  },
+  'contacts.retry': { es: 'Reintentar', en: 'Try again' },
+  'contacts.empty': { es: 'No encontramos contactos con número de teléfono.', en: 'No contacts with a phone number were found.' },
   'contacts.loading': { es: 'Cargando contactos…', en: 'Loading contacts…' },
   'contacts.permission': {
     es: 'Necesitamos permiso para acceder a tus contactos y poder elegir destinatarios.',

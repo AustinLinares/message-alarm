@@ -10,6 +10,7 @@ import { I18nProvider } from './src/shared/i18n';
 import { initNotifications } from './src/shared/notifications/init';
 import { FONT_ASSETS } from './src/shared/theme/fonts';
 import { ThemeProvider, useAppSettings, useTheme } from './src/shared/theme/ThemeProvider';
+import { DialogProvider } from './src/shared/ui/Dialog';
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -39,10 +40,10 @@ function Root() {
   if (!fontsSettled || !ready) return null;
 
   return (
-    <>
+    <DialogProvider>
       <RootNavigator />
       <StatusBar style={theme.mode === 'dark' ? 'light' : 'dark'} />
-    </>
+    </DialogProvider>
   );
 }
 

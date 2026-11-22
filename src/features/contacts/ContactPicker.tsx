@@ -1,13 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Check } from 'lucide-react-native';
-import { Alert, Pressable, SectionList, StyleSheet, Text, View, type AlertButton } from 'react-native';
+import { Pressable, SectionList, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useI18n } from '../../shared/i18n';
 import { type Theme } from '../../shared/theme/themes';
 import { useTheme, useThemedStyles } from '../../shared/theme/ThemeProvider';
 import { PrimaryButton, SecondaryButton } from '../../shared/ui/Buttons';
+import { useDialog } from '../../shared/ui/Dialog';
 import { ScreenBackground } from '../../shared/ui/ScreenBackground';
-import * as Contacts from 'expo-contacts';
+// SDK 57 moved the old contacts API to `expo-contacts/legacy`; the same calls on the
+// root entry now throw at runtime.
+import * as Contacts from 'expo-contacts/legacy';
 
 export interface PickedContact {
   name: string;
@@ -30,34 +33,53 @@ export function ContactPicker({ onConfirm, onCancel }: ContactPickerProps) {
   const styles = useThemedStyles(createStyles);
   const { t } = useI18n();
   const insets = useSafeAreaInsets();
-  const [status, setStatus] = useState<'loading' | 'denied' | 'ready'>('loading');
+  const dialog = useDialog();
+  const [status, setStatus] = useState<'loading' | 'denied' | 'error' | 'ready'>('loading');
+  const [attempt, setAttempt] = useState(0);
   const [contacts, setContacts] = useState<DeviceContact[]>([]);
   const [selected, setSelected] = useState<Map<string, PickedContact>>(new Map());
 
   useEffect(() => {
+    let cancelled = false;
+    setStatus('loading');
     (async () => {
-      const { status: permissionStatus } = await Contacts.requestPermissionsAsync();
-      if (permissionStatus !== 'granted') {
-        setStatus('denied');
-        return;
+      try {
+        const { status: permissionStatus } = await Contacts.requestPermissionsAsync();
+        if (cancelled) return;
+        if (permissionStatus !== 'granted') {
+          setStatus('denied');
+          return;
+        }
+        const { data } = await Contacts.getContactsAsync({
+          fields: [Contacts.Fields.PhoneNumbers],
+          sort: Contacts.SortTypes.FirstName,
+        });
+        if (cancelled) return;
+        const withPhones: DeviceContact[] = data
+          .filter((contact) => contact.name && contact.phoneNumbers && contact.phoneNumbers.length > 0)
+          .map((contact) => ({
+            id: contact.id ?? contact.name!,
+            name: contact.name!,
+            // The same number often appears more than once on a contact.
+            phoneNumbers: Array.from(
+              new Set(
+                (contact.phoneNumbers ?? [])
+                  .map((phone) => phone.number)
+                  .filter((number): number is string => !!number)
+              )
+            ),
+          }));
+        setContacts(withPhones);
+        setStatus('ready');
+      } catch {
+        // Without this the screen would sit on "loading" forever when reading fails.
+        if (!cancelled) setStatus('error');
       }
-      const { data } = await Contacts.getContactsAsync({
-        fields: [Contacts.Fields.PhoneNumbers],
-        sort: Contacts.SortTypes.FirstName,
-      });
-      const withPhones: DeviceContact[] = data
-        .filter((contact) => contact.name && contact.phoneNumbers && contact.phoneNumbers.length > 0)
-        .map((contact) => ({
-          id: contact.id ?? contact.name!,
-          name: contact.name!,
-          phoneNumbers: (contact.phoneNumbers ?? [])
-            .map((phone) => phone.number)
-            .filter((number): number is string => !!number),
-        }));
-      setContacts(withPhones);
-      setStatus('ready');
     })();
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [attempt]);
 
   const sections = useMemo(() => {
     const groups = new Map<string, DeviceContact[]>();
@@ -87,14 +109,17 @@ export function ContactPicker({ onConfirm, onCancel }: ContactPickerProps) {
       selectNumber(contact, contact.phoneNumbers[0]);
       return;
     }
-    const buttons: AlertButton[] = [
-      ...contact.phoneNumbers.map((number) => ({
-        text: number,
-        onPress: () => selectNumber(contact, number),
-      })),
-      { text: t('common.cancel'), style: 'cancel' as const },
-    ];
-    Alert.alert(contact.name, t('contacts.multiple_body'), buttons);
+    dialog.show({
+      title: contact.name,
+      message: t('contacts.multiple_body'),
+      actions: [
+        ...contact.phoneNumbers.map((number) => ({
+          label: number,
+          onPress: () => selectNumber(contact, number),
+        })),
+        { label: t('common.cancel'), style: 'cancel' as const },
+      ],
+    });
   }
 
   if (status === 'loading') {
@@ -105,10 +130,13 @@ export function ContactPicker({ onConfirm, onCancel }: ContactPickerProps) {
     );
   }
 
-  if (status === 'denied') {
+  if (status === 'denied' || status === 'error') {
     return (
       <View style={styles.center}>
-        <Text style={styles.message}>{t('contacts.permission')}</Text>
+        <Text style={styles.message}>{status === 'denied' ? t('contacts.permission') : t('contacts.error')}</Text>
+        {status === 'error' && (
+          <PrimaryButton label={t('contacts.retry')} onPress={() => setAttempt((n) => n + 1)} style={{ alignSelf: 'stretch' }} />
+        )}
         <SecondaryButton label={t('a11y.back')} onPress={onCancel} />
       </View>
     );
@@ -117,6 +145,7 @@ export function ContactPicker({ onConfirm, onCancel }: ContactPickerProps) {
   return (
     <ScreenBackground style={{ paddingTop: insets.top }}>
       <SectionList
+        ListEmptyComponent={<Text style={[styles.message, { marginTop: 40 }]}>{t('contacts.empty')}</Text>}
         sections={sections}
         keyExtractor={(item) => item.id}
         renderSectionHeader={({ section }) => <Text style={styles.sectionHeader}>{section.title}</Text>}
