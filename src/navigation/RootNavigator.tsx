@@ -9,6 +9,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as Notifications from 'expo-notifications';
 import { useEffect, useMemo } from 'react';
 import { AboutScreen } from '../features/about/AboutScreen';
+import { AppearanceScreen } from '../features/appearance/AppearanceScreen';
 import { handleNotificationTap } from '../features/scheduledMessages/alarmHandler';
 import { OccurrenceScreen } from '../features/scheduledMessages/OccurrenceScreen';
 import { ScheduledMessageFormScreen } from '../features/scheduledMessages/ScheduledMessageFormScreen';
@@ -21,6 +22,7 @@ export type RootStackParamList = {
   ScheduledMessageForm: { scheduledMessageId?: string; duplicateFromId?: string };
   Occurrence: { occurrenceId: string };
   Settings: undefined;
+  Appearance: undefined;
   About: undefined;
 };
 
@@ -64,6 +66,7 @@ function Navigator() {
       <Stack.Screen name="ScheduledMessageForm" component={ScheduledMessageFormScreen} />
       <Stack.Screen name="Occurrence" component={OccurrenceScreen} />
       <Stack.Screen name="Settings" component={SettingsScreen} />
+      <Stack.Screen name="Appearance" component={AppearanceScreen} />
       <Stack.Screen name="About" component={AboutScreen} />
     </Stack.Navigator>
   );

@@ -1,6 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { BatteryWarning, ChevronRight, Download, Info, Upload } from 'lucide-react-native';
+import { BatteryWarning, ChevronRight, Download, Info, Palette, Upload } from 'lucide-react-native';
 import { useState, type ReactNode } from 'react';
 import { Alert, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { RootStackParamList } from '../../navigation/RootNavigator';
@@ -25,7 +25,7 @@ export function SettingsScreen() {
   const theme = useTheme();
   const styles = useThemedStyles(createStyles);
   const { t } = useI18n();
-  const { reloadSettings } = useAppSettings();
+  const { reloadSettings, settings } = useAppSettings();
   const [working, setWorking] = useState(false);
 
   async function handleExport() {
@@ -87,6 +87,22 @@ export function SettingsScreen() {
     <View style={styles.container}>
       <TopBar title={t('settings.title')} />
       <ScrollView contentContainerStyle={styles.content}>
+        <View style={styles.section}>
+          <Text accessibilityRole="header" style={styles.sectionTitle}>
+            {t('settings.appearance')}
+          </Text>
+          <View style={styles.card}>
+            <Row
+              icon={<Palette size={18} color={theme.color.primary} />}
+              iconBackground={theme.color.primarySoft}
+              title={t('settings.theme')}
+              subtitle={t(`theme.${settings.theme}`)}
+              onPress={() => navigation.navigate('Appearance')}
+              last
+            />
+          </View>
+        </View>
+
         <View style={styles.section}>
           <Text accessibilityRole="header" style={styles.sectionTitle}>
             {t('settings.your_data')}

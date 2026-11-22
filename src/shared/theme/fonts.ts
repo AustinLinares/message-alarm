@@ -4,6 +4,15 @@ import {
   Inter_600SemiBold,
   Inter_700Bold,
 } from '@expo-google-fonts/inter';
+import { InterTight_400Regular, InterTight_500Medium, InterTight_600SemiBold, InterTight_800ExtraBold } from '@expo-google-fonts/inter-tight';
+import { Nunito_800ExtraBold, Nunito_900Black } from '@expo-google-fonts/nunito';
+import {
+  Outfit_200ExtraLight,
+  Outfit_300Light,
+  Outfit_400Regular,
+  Outfit_500Medium,
+  Outfit_600SemiBold,
+} from '@expo-google-fonts/outfit';
 import {
   SpaceGrotesk_500Medium,
   SpaceGrotesk_600SemiBold,
@@ -20,6 +29,17 @@ export const FONT_ASSETS = {
   SpaceGrotesk_500Medium,
   SpaceGrotesk_600SemiBold,
   SpaceGrotesk_700Bold,
+  InterTight_400Regular,
+  InterTight_500Medium,
+  InterTight_600SemiBold,
+  InterTight_800ExtraBold,
+  Outfit_200ExtraLight,
+  Outfit_300Light,
+  Outfit_400Regular,
+  Outfit_500Medium,
+  Outfit_600SemiBold,
+  Nunito_800ExtraBold,
+  Nunito_900Black,
 };
 
 const WEIGHT_SUFFIX: Record<number, string> = {

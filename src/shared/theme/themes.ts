@@ -46,6 +46,10 @@ export interface Theme {
   radius: { chip: number; control: number; input: number; card: number; cardLarge: number; hero: number };
 }
 
+export const GRADIENTS = tokens.themes.bloqueo.gradients as unknown as Record<GradientId, { name: string; stops: string[] }>;
+export const THEME_IDS: ThemeId[] = ['indigo', 'suizo', 'cristal', 'bloqueo'];
+export const GRADIENT_IDS: GradientId[] = ['atardecer', 'aurora', 'fuego', 'plata'];
+
 const shared = tokens.shared;
 export const spacing = shared.spacing;
 export const SCREEN_PADDING_X = shared.screenPaddingX;

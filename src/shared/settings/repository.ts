@@ -1,5 +1,5 @@
 import { getDb } from '../db/client';
-import { DEFAULT_GRADIENT, DEFAULT_THEME, type GradientId, type ThemeId } from '../theme/themes';
+import { DEFAULT_GRADIENT, DEFAULT_THEME, GRADIENT_IDS, THEME_IDS, type GradientId, type ThemeId } from '../theme/themes';
 
 export interface AppSettings {
   theme: ThemeId;
@@ -14,9 +14,6 @@ export const DEFAULT_SETTINGS: AppSettings = {
   followSystem: false,
   changeIcon: false,
 };
-
-const THEME_IDS: ThemeId[] = ['indigo', 'suizo', 'cristal', 'bloqueo'];
-const GRADIENT_IDS: GradientId[] = ['atardecer', 'aurora', 'fuego', 'plata'];
 
 // Keeps whatever is valid and falls back to defaults for the rest, so a
 // backup from an older or newer app can never leave the settings broken.
