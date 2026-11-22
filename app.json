@@ -62,7 +62,7 @@
         "expo-alternate-app-icons",
         [
           {
-            "name": "suizo",
+            "name": "Suizo",
             "ios": "./assets/icons/suizo-ios.png",
             "android": {
               "foregroundImage": "./assets/icons/suizo-android.png",
@@ -70,7 +70,7 @@
             }
           },
           {
-            "name": "cristal",
+            "name": "Cristal",
             "ios": "./assets/icons/cristal-ios.png",
             "android": {
               "foregroundImage": "./assets/icons/cristal-android.png",
@@ -78,7 +78,7 @@
             }
           },
           {
-            "name": "bloqueo",
+            "name": "Bloqueo",
             "ios": "./assets/icons/bloqueo-ios.png",
             "android": {
               "foregroundImage": "./assets/icons/bloqueo-android.png",
