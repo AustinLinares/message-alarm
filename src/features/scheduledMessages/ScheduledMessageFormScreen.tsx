@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ContactPicker, type PickedContact } from '../contacts/ContactPicker';
+import { isSameNumber } from '../contacts/phoneNumbers';
 import { createContact, getContact } from '../contacts/repository';
 import { TemplatePicker } from '../templates/TemplatePicker';
 import type { RootStackParamList } from '../../navigation/RootNavigator';
@@ -95,7 +96,7 @@ export function ScheduledMessageFormScreen() {
   }, [sourceId, isEditing]);
 
   function hasPhoneNumber(phoneNumber: string): boolean {
-    return recipients.some((recipient) => recipient.phoneNumber === phoneNumber);
+    return recipients.some((recipient) => isSameNumber(recipient.phoneNumber, phoneNumber));
   }
 
   async function addManualRecipient() {
