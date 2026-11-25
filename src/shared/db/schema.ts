@@ -87,4 +87,12 @@ export async function migrate(db: SQLiteDatabase): Promise<void> {
       CREATE_APP_SETTINGS,
     ].join('\n')
   );
+  await addColumnIfMissing(db, 'scheduled_messages', 'whatsapp_app', "TEXT NOT NULL DEFAULT 'auto'");
+}
+
+// Lightweight migrations for databases created by older versions.
+async function addColumnIfMissing(db: SQLiteDatabase, table: string, column: string, definition: string) {
+  const columns = await db.getAllAsync<{ name: string }>(`PRAGMA table_info(${table});`);
+  if (columns.some((c) => c.name === column)) return;
+  await db.execAsync(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition};`);
 }

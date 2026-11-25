@@ -4,11 +4,12 @@ import * as Clipboard from 'expo-clipboard';
 import { StatusBar } from 'expo-status-bar';
 import { AlarmClock, Check, ExternalLink } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
-import { Linking, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { RootStackParamList } from '../../navigation/RootNavigator';
 import { useI18n } from '../../shared/i18n';
 import { scheduleSnooze } from '../../shared/notifications/scheduler';
+import { openWhatsAppChat } from '../../shared/whatsapp';
 import { MESSAGE_MAX_LENGTH, type Theme } from '../../shared/theme/themes';
 import { useTheme, useThemedStyles } from '../../shared/theme/ThemeProvider';
 import { Clock } from '../../shared/ui/Clock';
@@ -28,11 +29,6 @@ interface OccurrenceScreenProps {
 interface RecipientRow {
   contact: Contact;
   status: RecipientStatus;
-}
-
-function buildWhatsAppUrl(phoneNumber: string, text: string): string {
-  const digits = phoneNumber.replace(/\D/g, '');
-  return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
 }
 
 export function OccurrenceScreen({ route }: OccurrenceScreenProps) {
@@ -69,7 +65,13 @@ export function OccurrenceScreen({ route }: OccurrenceScreenProps) {
   // recipient as done; the app still can't verify the message actually went out.
   async function handleOpenChat(contact: Contact) {
     if (!message || !occurrence) return;
-    await Linking.openURL(buildWhatsAppUrl(contact.phoneNumber, message.text));
+    const result = await openWhatsAppChat(message.whatsappApp, contact.phoneNumber, message.text);
+    if (result === 'fallback') {
+      dialog.show({
+        title: t('occurrence.app_missing_title'),
+        message: t('occurrence.app_missing_body', { app: message.whatsappApp === 'business' ? 'WhatsApp Business' : 'WhatsApp' }),
+      });
+    }
     await setRecipientStatus(occurrence.id, contact.id, 'confirmed');
     setRecipients((prev) =>
       prev.map((row) => (row.contact.id === contact.id ? { ...row, status: 'confirmed' } : row))

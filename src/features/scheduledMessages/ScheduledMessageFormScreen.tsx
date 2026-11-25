@@ -19,7 +19,8 @@ import { DialogProvider, useDialog } from '../../shared/ui/Dialog';
 import { Clock } from '../../shared/ui/Clock';
 import { ScreenBackground } from '../../shared/ui/ScreenBackground';
 import { TopBar } from '../../shared/ui/TopBar';
-import type { Contact, MessageTemplate, RecurrenceType } from '../../shared/types';
+import type { Contact, MessageTemplate, RecurrenceType, WhatsAppApp } from '../../shared/types';
+import { WHATSAPP_APPS } from '../../shared/whatsapp';
 import { getScheduledMessage } from './repository';
 import { createScheduledMessage, updateScheduledMessage } from './service';
 
@@ -68,6 +69,7 @@ export function ScheduledMessageFormScreen() {
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [recurrenceType, setRecurrenceType] = useState<RecurrenceType>('none');
   const [daysOfWeek, setDaysOfWeek] = useState<number[]>([]);
+  const [whatsappApp, setWhatsappApp] = useState<WhatsAppApp>('auto');
   const [showContactPicker, setShowContactPicker] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -91,6 +93,7 @@ export function ScheduledMessageFormScreen() {
       );
       setRecurrenceType(message.recurrence.type);
       setDaysOfWeek(message.recurrence.daysOfWeek ?? []);
+      setWhatsappApp(message.whatsappApp);
       setLoading(false);
     })();
   }, [sourceId, isEditing]);
@@ -162,6 +165,7 @@ export function ScheduledMessageFormScreen() {
           startAt: startAt.toISOString(),
           recurrence,
           isActive: true,
+          whatsappApp,
         });
       } else {
         await createScheduledMessage({
@@ -171,6 +175,7 @@ export function ScheduledMessageFormScreen() {
           startAt: startAt.toISOString(),
           recurrence,
           isActive: true,
+          whatsappApp,
         });
       }
       navigation.goBack();
@@ -363,6 +368,34 @@ export function ScheduledMessageFormScreen() {
             <Text style={styles.pickContactsText}>{t('compose.pick_contacts')}</Text>
           </Pressable>
         </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>{upper(t('compose.open_with'))}</Text>
+          <View accessibilityRole="radiogroup" style={styles.segmented}>
+            {WHATSAPP_APPS.map((app) => {
+              const selected = whatsappApp === app;
+              return (
+                <Pressable
+                  key={app}
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: selected }}
+                  onPress={() => setWhatsappApp(app)}
+                  style={[styles.segment, selected && styles.segmentSelected]}
+                >
+                  <Text
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.75}
+                    style={[styles.segmentText, selected && styles.segmentTextSelected]}
+                  >
+                    {upper(t(`whatsapp.${app}`))}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+          <Text style={styles.hint}>{t('compose.open_with_hint')}</Text>
+        </View>
       </ScrollView>
 
       <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
@@ -408,6 +441,7 @@ function createStyles(theme: Theme) {
     container: { flex: 1, backgroundColor: c.background },
     center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: c.background },
     muted: { fontFamily: theme.font.body(400), color: c.textMuted },
+    hint: { fontFamily: theme.font.body(400), fontSize: 13, lineHeight: 18, color: c.textMuted },
     content: { paddingHorizontal: SCREEN_PADDING_X, paddingTop: 8, paddingBottom: 140, gap: swiss ? 16 : 22 },
     ringsCard: swiss
       ? { paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: c.borderStrong, gap: 12 }

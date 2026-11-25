@@ -1,4 +1,5 @@
 import { loadSettings, sanitizeSettings, type AppSettings } from '../settings/repository';
+import { sanitizeWhatsAppApp } from '../whatsapp';
 import { getDb } from './client';
 
 interface ContactRow {
@@ -21,6 +22,8 @@ interface ScheduledMessageRow {
   recurrence_type: string;
   recurrence_days_of_week: string | null;
   is_active: number;
+  // Added after v1 shipped: older backups don't have it.
+  whatsapp_app?: string | null;
 }
 
 interface ScheduledMessageRecipientRow {
@@ -123,9 +126,18 @@ export async function restoreFromBackupPayload(payload: BackupPayload): Promise<
     for (const row of payload.scheduledMessages) {
       await txn.runAsync(
         `INSERT INTO scheduled_messages
-          (id, text, template_id, start_at, recurrence_type, recurrence_days_of_week, is_active)
-         VALUES (?, ?, ?, ?, ?, ?, ?);`,
-        [row.id, row.text, row.template_id, row.start_at, row.recurrence_type, row.recurrence_days_of_week, row.is_active]
+          (id, text, template_id, start_at, recurrence_type, recurrence_days_of_week, is_active, whatsapp_app)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?);`,
+        [
+          row.id,
+          row.text,
+          row.template_id,
+          row.start_at,
+          row.recurrence_type,
+          row.recurrence_days_of_week,
+          row.is_active,
+          sanitizeWhatsAppApp(row.whatsapp_app),
+        ]
       );
     }
     for (const row of payload.scheduledMessageRecipients) {

@@ -17,6 +17,9 @@ export interface Recurrence {
   daysOfWeek?: number[]; // 0-6, only used when type === 'weekly'
 }
 
+// Which app opens the chat: the system default for wa.me links, or a specific one.
+export type WhatsAppApp = 'auto' | 'whatsapp' | 'business';
+
 export interface ScheduledMessage {
   id: string;
   text: string;
@@ -25,6 +28,7 @@ export interface ScheduledMessage {
   startAt: string; // ISO datetime
   recurrence: Recurrence;
   isActive: boolean;
+  whatsappApp: WhatsAppApp;
 }
 
 export type RecipientStatus = 'pending' | 'confirmed';

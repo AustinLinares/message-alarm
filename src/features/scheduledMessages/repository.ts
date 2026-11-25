@@ -2,6 +2,7 @@ import type { SQLiteDatabase } from 'expo-sqlite';
 import { getDb } from '../../shared/db/client';
 import { generateId } from '../../shared/utils/id';
 import type { RecurrenceType, ScheduledMessage } from '../../shared/types';
+import { sanitizeWhatsAppApp } from '../../shared/whatsapp';
 
 interface ScheduledMessageRow {
   id: string;
@@ -11,6 +12,7 @@ interface ScheduledMessageRow {
   recurrence_type: RecurrenceType;
   recurrence_days_of_week: string | null;
   is_active: number;
+  whatsapp_app: string | null;
 }
 
 function mapRow(row: ScheduledMessageRow, recipientIds: string[]): ScheduledMessage {
@@ -25,6 +27,7 @@ function mapRow(row: ScheduledMessageRow, recipientIds: string[]): ScheduledMess
       daysOfWeek: row.recurrence_days_of_week ? JSON.parse(row.recurrence_days_of_week) : undefined,
     },
     isActive: row.is_active === 1,
+    whatsappApp: sanitizeWhatsAppApp(row.whatsapp_app),
   };
 }
 
@@ -59,15 +62,16 @@ export async function createScheduledMessage(input: Omit<ScheduledMessage, 'id'>
   const id = generateId();
   await db.runAsync(
     `INSERT INTO scheduled_messages
-      (id, text, template_id, start_at, recurrence_type, recurrence_days_of_week, is_active)
-     VALUES (?, ?, ?, ?, ?, ?, ?);`,
+      (id, text, template_id, start_at, recurrence_type, recurrence_days_of_week, is_active, whatsapp_app)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?);`,
     id,
     input.text,
     input.templateId ?? null,
     input.startAt,
     input.recurrence.type,
     input.recurrence.daysOfWeek ? JSON.stringify(input.recurrence.daysOfWeek) : null,
-    input.isActive ? 1 : 0
+    input.isActive ? 1 : 0,
+    input.whatsappApp
   );
   await replaceRecipients(db, id, input.recipientIds);
   return { id, ...input };
@@ -94,7 +98,7 @@ export async function updateScheduledMessage(message: ScheduledMessage): Promise
   const db = await getDb();
   await db.runAsync(
     `UPDATE scheduled_messages
-     SET text = ?, template_id = ?, start_at = ?, recurrence_type = ?, recurrence_days_of_week = ?, is_active = ?
+     SET text = ?, template_id = ?, start_at = ?, recurrence_type = ?, recurrence_days_of_week = ?, is_active = ?, whatsapp_app = ?
      WHERE id = ?;`,
     message.text,
     message.templateId ?? null,
@@ -102,6 +106,7 @@ export async function updateScheduledMessage(message: ScheduledMessage): Promise
     message.recurrence.type,
     message.recurrence.daysOfWeek ? JSON.stringify(message.recurrence.daysOfWeek) : null,
     message.isActive ? 1 : 0,
+    message.whatsappApp,
     message.id
   );
   await replaceRecipients(db, message.id, message.recipientIds);
