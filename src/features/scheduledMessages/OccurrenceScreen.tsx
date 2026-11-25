@@ -95,7 +95,7 @@ export function OccurrenceScreen({ route }: OccurrenceScreenProps) {
 
   if (!message || !occurrence) {
     return (
-      <ScreenBackground style={styles.center}>
+      <ScreenBackground inverse style={styles.center}>
         <Text style={styles.muted}>{t('common.loading')}</Text>
       </ScreenBackground>
     );
@@ -108,7 +108,7 @@ export function OccurrenceScreen({ route }: OccurrenceScreenProps) {
   const upper = (text: string) => (theme.ui.uppercase ? text.toUpperCase() : text);
 
   return (
-    <ScreenBackground>
+    <ScreenBackground inverse>
       <StatusBar style={theme.mode === 'dark' || theme.id === 'indigo' ? 'light' : 'dark'} />
       {theme.ui.ruled && <View style={styles.swissCircle} />}
       <ScrollView

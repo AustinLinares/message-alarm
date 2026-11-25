@@ -10,11 +10,21 @@ const CRISTAL_GLOWS: Glow[] = [
 const BLOQUEO_GLOWS: Glow[] = [{ cx: '50%', cy: '18%', r: '60%', color: '#FF5E8A', opacity: 0.28 }];
 
 // Page background: flat colour, or the dark themes' glowing gradients.
-export function ScreenBackground({ children, style }: { children: ReactNode; style?: StyleProp<ViewStyle> }) {
+// `inverse` paints the theme's "on-dark" surface instead (Indigo's alarm screen
+// is dark even though the rest of the theme is light).
+export function ScreenBackground({
+  children,
+  style,
+  inverse,
+}: {
+  children: ReactNode;
+  style?: StyleProp<ViewStyle>;
+  inverse?: boolean;
+}) {
   const theme = useTheme();
   const glows = theme.ui.background === 'cristal' ? CRISTAL_GLOWS : theme.ui.background === 'bloqueo' ? BLOQUEO_GLOWS : null;
   return (
-    <View style={[{ flex: 1, backgroundColor: theme.color.background }, style]}>
+    <View style={[{ flex: 1, backgroundColor: inverse ? theme.color.inverse : theme.color.background }, style]}>
       {glows && <RadialGlow glows={glows} />}
       {children}
     </View>
