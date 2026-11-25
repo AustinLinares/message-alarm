@@ -1,13 +1,15 @@
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { BatteryWarning, ChevronRight, Download, Info, Palette, Upload } from 'lucide-react-native';
+import { BatteryWarning, BellRing, ChevronRight, Download, Info, Palette, Upload } from 'lucide-react-native';
 import { useState, type ReactNode } from 'react';
 import { Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { RootStackParamList } from '../../navigation/RootNavigator';
 import { useI18n } from '../../shared/i18n';
 import { SCREEN_PADDING_X, type Theme } from '../../shared/theme/themes';
 import { useAppSettings, useTheme, useThemedStyles } from '../../shared/theme/ThemeProvider';
+import { applyAlarmMode } from '../../shared/notifications/alarmMode';
 import { useDialog } from '../../shared/ui/Dialog';
+import { Toggle } from '../../shared/ui/Toggle';
 import { ScreenBackground } from '../../shared/ui/ScreenBackground';
 import { TopBar } from '../../shared/ui/TopBar';
 import { exportBackup, importBackup } from './backupService';
@@ -27,9 +29,15 @@ export function SettingsScreen() {
   const theme = useTheme();
   const styles = useThemedStyles(createStyles);
   const { t } = useI18n();
-  const { reloadSettings, settings } = useAppSettings();
+  const { reloadSettings, settings, updateSettings } = useAppSettings();
   const dialog = useDialog();
   const [working, setWorking] = useState(false);
+
+  async function handleAlarmMode(enabled: boolean) {
+    await applyAlarmMode(enabled);
+    updateSettings({ alarmMode: enabled });
+    if (enabled) dialog.show({ title: t('alarmmode.on_title'), message: t('alarmmode.on_body') });
+  }
 
   async function handleExport() {
     setWorking(true);
@@ -144,6 +152,18 @@ export function SettingsScreen() {
             <Text accessibilityRole="header" style={styles.sectionTitle}>
               {t('settings.reliable_alarms')}
             </Text>
+            <View style={[styles.card, styles.batteryCard, styles.alarmCard]}>
+              <View style={styles.batteryTop}>
+                <View style={[styles.rowIcon, { backgroundColor: theme.color.primarySoft }]}>
+                  <BellRing size={18} color={theme.color.primary} />
+                </View>
+                <View style={styles.rowText}>
+                  <Text style={styles.rowTitle}>{t('alarmmode.title')}</Text>
+                  <Text style={styles.batteryText}>{t('alarmmode.body')}</Text>
+                </View>
+                <Toggle value={settings.alarmMode} label={t('alarmmode.title')} onValueChange={handleAlarmMode} />
+              </View>
+            </View>
             <View style={[styles.card, styles.batteryCard]}>
               <View style={styles.batteryTop}>
                 <View style={[styles.rowIcon, { backgroundColor: theme.color.warningSoft }]}>
@@ -227,6 +247,7 @@ function createStyles(theme: Theme) {
     rowText: { flex: 1, gap: 2 },
     rowTitle: { fontFamily: theme.font.body(600), fontSize: swiss ? 16 : 15, color: c.text },
     rowSubtitle: { fontFamily: theme.font.body(400), fontSize: 13, color: c.textMuted },
+    alarmCard: { marginBottom: 12 },
     batteryCard: { padding: swiss ? 0 : 16, paddingVertical: 16, gap: 14 },
     batteryTop: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
     batteryText: { fontFamily: theme.font.body(400), fontSize: 14, lineHeight: 21, color: c.textSecondary },

@@ -135,5 +135,23 @@ export const APP_STRINGS: Record<string, StringEntry> = {
   },
 
   'notification.title': { es: 'Mensaje programado', en: 'Scheduled message' },
+  'notification.channel_alarm': { es: 'Alarmas (volumen de alarma)', en: 'Alarms (alarm volume)' },
+  'alarmmode.banner_title': { es: 'Haz que suene como alarma', en: 'Make it ring like an alarm' },
+  'alarmmode.banner_body': {
+    es: 'Ahora la app avisa como una notificación y puede no sonar si el teléfono está en silencio o con poco volumen. Actívalo para que suene con el volumen de alarma.',
+    en: 'Right now the app alerts like a notification and may stay silent if your phone is muted or the volume is low. Turn it on to ring at alarm volume.',
+  },
+  'alarmmode.enable': { es: 'Activar modo alarma', en: 'Turn on alarm mode' },
+  'alarmmode.dismiss': { es: 'Cerrar aviso', en: 'Dismiss' },
+  'alarmmode.title': { es: 'Sonar como alarma', en: 'Ring like an alarm' },
+  'alarmmode.body': {
+    es: 'Usa el canal de audio de alarma de Android: suena con el volumen de alarma, también con el teléfono en silencio o vibración, y se muestra en la pantalla de bloqueo. No pide permisos del sistema. El modo No molestar en «Silencio total» sigue bloqueándola.',
+    en: "Uses Android's alarm audio channel: it rings at the alarm volume, even when the phone is on silent or vibrate, and shows on the lock screen. It doesn't ask for any system permission. Do Not Disturb set to “Total silence” still blocks it.",
+  },
+  'alarmmode.on_title': { es: 'Modo alarma activado', en: 'Alarm mode is on' },
+  'alarmmode.on_body': {
+    es: 'Tus alarmas ahora suenan con el volumen de alarma. Revisa que ese volumen no esté en cero (Ajustes del teléfono > Sonido).',
+    en: 'Your alarms now ring at the alarm volume. Make sure that volume isn\'t at zero (phone Settings > Sound).',
+  },
   'notification.channel': { es: 'Alarmas de mensajes', en: 'Message alarms' },
 };

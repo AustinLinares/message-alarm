@@ -6,6 +6,9 @@ export interface AppSettings {
   gradient: GradientId;
   followSystem: boolean;
   changeIcon: boolean;
+  // Android: ring on the alarm audio channel (alarm volume, works on silent).
+  alarmMode: boolean;
+  alarmBannerDismissed: boolean;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -13,6 +16,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   gradient: DEFAULT_GRADIENT,
   followSystem: false,
   changeIcon: false,
+  alarmMode: false,
+  alarmBannerDismissed: false,
 };
 
 // Keeps whatever is valid and falls back to defaults for the rest, so a
@@ -24,6 +29,9 @@ export function sanitizeSettings(raw: unknown, base: AppSettings = DEFAULT_SETTI
     gradient: GRADIENT_IDS.includes(value.gradient as GradientId) ? (value.gradient as GradientId) : base.gradient,
     followSystem: typeof value.followSystem === 'boolean' ? value.followSystem : base.followSystem,
     changeIcon: typeof value.changeIcon === 'boolean' ? value.changeIcon : base.changeIcon,
+    alarmMode: typeof value.alarmMode === 'boolean' ? value.alarmMode : base.alarmMode,
+    alarmBannerDismissed:
+      typeof value.alarmBannerDismissed === 'boolean' ? value.alarmBannerDismissed : base.alarmBannerDismissed,
   };
 }
 

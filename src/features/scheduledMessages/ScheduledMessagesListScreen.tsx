@@ -11,6 +11,7 @@ import { SCREEN_PADDING_X, type Theme } from '../../shared/theme/themes';
 import { useTheme, useThemedStyles } from '../../shared/theme/ThemeProvider';
 import type { Contact, RecurrenceType, ScheduledMessage } from '../../shared/types';
 import { ActionMenu } from '../../shared/ui/ActionMenu';
+import { AlarmModeBanner } from '../../shared/ui/AlarmModeBanner';
 import { BrandMark, brandColors } from '../../shared/ui/BrandMark';
 import { Clock } from '../../shared/ui/Clock';
 import { ScreenBackground } from '../../shared/ui/ScreenBackground';
@@ -301,6 +302,8 @@ export function ScheduledMessagesListScreen() {
           {hero}
         </>
       )}
+
+      <AlarmModeBanner />
 
       <View style={styles.listHeader}>
         <Text accessibilityRole="header" style={styles.listTitle}>
