@@ -31,6 +31,9 @@ export interface I18n {
   formatDay: (date: Date) => string; // "sáb 21 nov" / "Sat, Nov 21"
   formatLongDay: (date: Date) => string; // "sábado, 21 de noviembre"
   weekdayShort: (day: number) => string; // 0 = Sunday
+  formatMonthYear: (date: Date) => string; // "noviembre 2026"
+  uses24h: boolean;
+  firstWeekday: number; // 0 = Sunday, 1 = Monday
 }
 
 const I18nContext = createContext<I18n | null>(null);
@@ -51,6 +54,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     const dayFormat = new Intl.DateTimeFormat(tag, { weekday: 'short', day: 'numeric', month: 'short' });
     const longDayFormat = new Intl.DateTimeFormat(tag, { weekday: 'long', day: 'numeric', month: 'long' });
     const weekdayFormat = new Intl.DateTimeFormat(tag, { weekday: 'narrow' });
+    const monthYearFormat = new Intl.DateTimeFormat(tag, { month: 'long', year: 'numeric' });
     return {
       locale,
       t: (key, params) => translate(key, params, locale),
@@ -59,6 +63,9 @@ export function I18nProvider({ children }: { children: ReactNode }) {
       formatLongDay: (date) => longDayFormat.format(date),
       // 2023-01-01 was a Sunday.
       weekdayShort: (day) => weekdayFormat.format(new Date(2023, 0, 1 + day)),
+      formatMonthYear: (date) => monthYearFormat.format(date),
+      uses24h: typeof uses24h === 'boolean' ? uses24h : !timeFormat.resolvedOptions().hour12,
+      firstWeekday: locale === 'es' ? 1 : 0,
     };
   }, [tag, locale, uses24h]);
 

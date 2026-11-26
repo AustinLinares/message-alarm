@@ -6,6 +6,7 @@ import { MESSAGE_MAX_LENGTH, type Theme } from '../../shared/theme/themes';
 import { useTheme, useThemedStyles } from '../../shared/theme/ThemeProvider';
 import { PrimaryButton, SecondaryButton } from '../../shared/ui/Buttons';
 import { useDialog } from '../../shared/ui/Dialog';
+import { KeyboardAvoider, useKeyboardVisible } from '../../shared/ui/KeyboardAvoider';
 import { ScreenBackground } from '../../shared/ui/ScreenBackground';
 import type { MessageTemplate } from '../../shared/types';
 import { createTemplate, deleteTemplate, listTemplates, updateTemplate } from './repository';
@@ -22,6 +23,7 @@ export function TemplatePicker({ onSelect, onClose }: TemplatePickerProps) {
   const styles = useThemedStyles(createStyles);
   const { t } = useI18n();
   const insets = useSafeAreaInsets();
+  const keyboardVisible = useKeyboardVisible();
   const dialog = useDialog();
   const [templates, setTemplates] = useState<MessageTemplate[]>([]);
   const [mode, setMode] = useState<Mode>({ kind: 'list' });
@@ -74,11 +76,12 @@ export function TemplatePicker({ onSelect, onClose }: TemplatePickerProps) {
     });
   }
 
-  const containerStyle = [styles.container, { paddingTop: insets.top + 16, paddingBottom: insets.bottom + 16 }];
+  const containerStyle = [styles.container, { paddingTop: insets.top + 16, paddingBottom: keyboardVisible ? 16 : insets.bottom + 16 }];
 
   if (mode.kind === 'form') {
     return (
       <ScreenBackground style={containerStyle}>
+        <KeyboardAvoider>
         <Text style={styles.label}>{t('templates.name')}</Text>
         <TextInput
           style={styles.input}
@@ -101,6 +104,7 @@ export function TemplatePicker({ onSelect, onClose }: TemplatePickerProps) {
           <SecondaryButton label={t('common.cancel')} onPress={() => setMode({ kind: 'list' })} style={{ flex: 1, minHeight: 56 }} />
           <PrimaryButton label={t('common.save')} onPress={handleSaveTemplate} style={{ flex: 1 }} />
         </View>
+        </KeyboardAvoider>
       </ScreenBackground>
     );
   }

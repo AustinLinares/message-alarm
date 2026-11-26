@@ -1,7 +1,6 @@
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import { AlarmClock, Calendar, LayoutGrid, Plus, UserPlus, X } from 'lucide-react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { useEffect, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -17,6 +16,8 @@ import { useTheme, useThemedStyles } from '../../shared/theme/ThemeProvider';
 import { PrimaryButton } from '../../shared/ui/Buttons';
 import { DialogProvider, useDialog } from '../../shared/ui/Dialog';
 import { Clock } from '../../shared/ui/Clock';
+import { DatePickerSheet, TimePickerSheet } from '../../shared/ui/DateTimePickers';
+import { KeyboardAvoider, useKeyboardVisible } from '../../shared/ui/KeyboardAvoider';
 import { ScreenBackground } from '../../shared/ui/ScreenBackground';
 import { TopBar } from '../../shared/ui/TopBar';
 import type { Contact, MessageTemplate, RecurrenceType, WhatsAppApp } from '../../shared/types';
@@ -72,6 +73,7 @@ export function ScheduledMessageFormScreen() {
   const [whatsappApp, setWhatsappApp] = useState<WhatsAppApp>('auto');
   const [showContactPicker, setShowContactPicker] = useState(false);
   const [saving, setSaving] = useState(false);
+  const keyboardVisible = useKeyboardVisible();
 
   useEffect(() => {
     if (!sourceId) return;
@@ -201,6 +203,7 @@ export function ScheduledMessageFormScreen() {
   return (
     <ScreenBackground>
       <TopBar title={title} />
+      <KeyboardAvoider>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.ringsCard}>
           <View style={styles.capsRow}>
@@ -262,32 +265,24 @@ export function ScheduledMessageFormScreen() {
             </View>
           )}
         </View>
-        {showDatePicker && (
-          <DateTimePicker
-            value={startAt}
-            mode="date"
-            themeVariant={theme.mode}
-            positiveButton={{ label: t('common.ok'), textColor: theme.color.primary }}
-            negativeButton={{ label: t('common.cancel'), textColor: theme.color.textMuted }}
-            onChange={(_event, selected) => {
-              setShowDatePicker(false);
-              if (selected) setStartAt((prev) => mergeDate(prev, selected));
-            }}
-          />
-        )}
-        {showTimePicker && (
-          <DateTimePicker
-            value={startAt}
-            mode="time"
-            themeVariant={theme.mode}
-            positiveButton={{ label: t('common.ok'), textColor: theme.color.primary }}
-            negativeButton={{ label: t('common.cancel'), textColor: theme.color.textMuted }}
-            onChange={(_event, selected) => {
-              setShowTimePicker(false);
-              if (selected) setStartAt((prev) => mergeTime(prev, selected));
-            }}
-          />
-        )}
+        <DatePickerSheet
+          visible={showDatePicker}
+          value={startAt}
+          onCancel={() => setShowDatePicker(false)}
+          onConfirm={(picked) => {
+            setShowDatePicker(false);
+            setStartAt((prev) => mergeDate(prev, picked));
+          }}
+        />
+        <TimePickerSheet
+          visible={showTimePicker}
+          value={startAt}
+          onCancel={() => setShowTimePicker(false)}
+          onConfirm={(picked) => {
+            setShowTimePicker(false);
+            setStartAt((prev) => mergeTime(prev, picked));
+          }}
+        />
 
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
@@ -398,7 +393,7 @@ export function ScheduledMessageFormScreen() {
         </View>
       </ScrollView>
 
-      <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
+      <View style={[styles.footer, { paddingBottom: keyboardVisible ? 16 : insets.bottom + 16 }]}>
         <PrimaryButton
           label={saveLabel}
           onPress={handleSave}
@@ -406,6 +401,7 @@ export function ScheduledMessageFormScreen() {
           icon={<AlarmClock size={20} color={theme.color.onPrimary} strokeWidth={2.2} />}
         />
       </View>
+      </KeyboardAvoider>
 
       <Modal visible={showContactPicker} animationType="slide" onRequestClose={() => setShowContactPicker(false)}>
         <DialogProvider>
@@ -442,7 +438,7 @@ function createStyles(theme: Theme) {
     center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: c.background },
     muted: { fontFamily: theme.font.body(400), color: c.textMuted },
     hint: { fontFamily: theme.font.body(400), fontSize: 13, lineHeight: 18, color: c.textMuted },
-    content: { paddingHorizontal: SCREEN_PADDING_X, paddingTop: 8, paddingBottom: 140, gap: swiss ? 16 : 22 },
+    content: { paddingHorizontal: SCREEN_PADDING_X, paddingTop: 8, paddingBottom: 24, gap: swiss ? 16 : 22 },
     ringsCard: swiss
       ? { paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: c.borderStrong, gap: 12 }
       : { padding: 18, borderRadius: theme.radius.cardLarge, backgroundColor: c.surface, gap: 14, ...boxed },
@@ -604,10 +600,6 @@ function createStyles(theme: Theme) {
     },
     pickContactsText: { fontFamily: theme.font.body(600), fontSize: 14, color: c.text },
     footer: {
-      position: 'absolute',
-      left: 0,
-      right: 0,
-      bottom: 0,
       paddingHorizontal: SCREEN_PADDING_X,
       paddingTop: 16,
       backgroundColor: c.background,

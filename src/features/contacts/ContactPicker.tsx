@@ -7,6 +7,7 @@ import { type Theme } from '../../shared/theme/themes';
 import { useTheme, useThemedStyles } from '../../shared/theme/ThemeProvider';
 import { PrimaryButton, SecondaryButton } from '../../shared/ui/Buttons';
 import { useDialog } from '../../shared/ui/Dialog';
+import { KeyboardAvoider, useKeyboardVisible } from '../../shared/ui/KeyboardAvoider';
 import { ScreenBackground } from '../../shared/ui/ScreenBackground';
 import { digitsOf, isMobileLabel, mergePhoneNumbers, type PhoneEntry } from './phoneNumbers';
 // SDK 57 moved the old contacts API to `expo-contacts/legacy`; the same calls on the
@@ -39,6 +40,7 @@ export function ContactPicker({ onConfirm, onCancel }: ContactPickerProps) {
   const styles = useThemedStyles(createStyles);
   const { t } = useI18n();
   const insets = useSafeAreaInsets();
+  const keyboardVisible = useKeyboardVisible();
   const dialog = useDialog();
   const [status, setStatus] = useState<'loading' | 'denied' | 'error' | 'ready'>('loading');
   const [attempt, setAttempt] = useState(0);
@@ -166,6 +168,7 @@ export function ContactPicker({ onConfirm, onCancel }: ContactPickerProps) {
 
   return (
     <ScreenBackground style={{ paddingTop: insets.top }}>
+      <KeyboardAvoider>
       <View style={styles.searchBox}>
         <Search size={18} color={theme.color.textMuted} />
         <TextInput
@@ -217,7 +220,7 @@ export function ContactPicker({ onConfirm, onCancel }: ContactPickerProps) {
           );
         }}
       />
-      <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
+      <View style={[styles.footer, { paddingBottom: keyboardVisible ? 16 : insets.bottom + 16 }]}>
         <SecondaryButton label={t('common.cancel')} onPress={onCancel} style={{ flex: 1, minHeight: 56 }} />
         <PrimaryButton
           label={t('contacts.add_selected', { n: selected.size })}
@@ -226,6 +229,7 @@ export function ContactPicker({ onConfirm, onCancel }: ContactPickerProps) {
           style={{ flex: 2 }}
         />
       </View>
+      </KeyboardAvoider>
     </ScreenBackground>
   );
 }

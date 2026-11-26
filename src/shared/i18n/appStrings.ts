@@ -135,6 +135,13 @@ export const APP_STRINGS: Record<string, StringEntry> = {
   },
 
   'notification.title': { es: 'Mensaje programado', en: 'Scheduled message' },
+  'picker.date_title': { es: 'Fecha', en: 'Date' },
+  'picker.time_title': { es: 'Hora', en: 'Time' },
+  'picker.prev_month': { es: 'Mes anterior', en: 'Previous month' },
+  'picker.next_month': { es: 'Mes siguiente', en: 'Next month' },
+  'picker.hours': { es: 'Horas', en: 'Hours' },
+  'picker.minutes': { es: 'Minutos', en: 'Minutes' },
+  'picker.period': { es: 'AM o PM', en: 'AM or PM' },
   'notification.channel_alarm': { es: 'Alarmas (volumen de alarma)', en: 'Alarms (alarm volume)' },
   'alarmmode.banner_title': { es: 'Haz que suene como alarma', en: 'Make it ring like an alarm' },
   'alarmmode.banner_body': {
