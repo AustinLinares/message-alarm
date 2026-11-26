@@ -1,5 +1,8 @@
 import { Linking } from 'react-native';
 import { openInPackage } from '../../modules/whatsapp-launcher';
+import { toInternationalDigits } from '../features/contacts/phoneNumbers';
+import { resolveCountry } from './countries';
+import { loadSettings } from './settings/repository';
 import type { WhatsAppApp } from './types';
 
 export const WHATSAPP_APPS: WhatsAppApp[] = ['auto', 'whatsapp', 'business'];
@@ -13,8 +16,8 @@ export function sanitizeWhatsAppApp(value: unknown): WhatsAppApp {
   return value === 'whatsapp' || value === 'business' ? value : 'auto';
 }
 
-export function buildWhatsAppUrl(phoneNumber: string, text: string): string {
-  const digits = phoneNumber.replace(/\D/g, '');
+export function buildWhatsAppUrl(phoneNumber: string, text: string, dialCode: string | null = null): string {
+  const digits = toInternationalDigits(phoneNumber, dialCode);
   return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
 }
 
@@ -25,7 +28,8 @@ export async function openWhatsAppChat(
   phoneNumber: string,
   text: string
 ): Promise<'opened' | 'fallback'> {
-  const url = buildWhatsAppUrl(phoneNumber, text);
+  const { defaultCountry } = await loadSettings();
+  const url = buildWhatsAppUrl(phoneNumber, text, resolveCountry(defaultCountry)?.code ?? null);
   if (app === 'auto') {
     await Linking.openURL(url);
     return 'opened';

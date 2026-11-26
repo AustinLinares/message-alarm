@@ -1,8 +1,8 @@
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { BatteryWarning, BellRing, ChevronRight, Download, Info, Palette, Upload } from 'lucide-react-native';
+import { BatteryWarning, BellRing, ChevronRight, Globe, Download, Info, Palette, Upload } from 'lucide-react-native';
 import { useState, type ReactNode } from 'react';
-import { Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Linking, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type { RootStackParamList } from '../../navigation/RootNavigator';
 import { useI18n } from '../../shared/i18n';
 import { SCREEN_PADDING_X, type Theme } from '../../shared/theme/themes';
@@ -12,7 +12,9 @@ import { useDialog } from '../../shared/ui/Dialog';
 import { Toggle } from '../../shared/ui/Toggle';
 import { ScreenBackground } from '../../shared/ui/ScreenBackground';
 import { TopBar } from '../../shared/ui/TopBar';
+import { COUNTRY_AUTO, COUNTRY_NONE, countryName, resolveCountry } from '../../shared/countries';
 import { exportBackup, importBackup } from './backupService';
+import { CountryPicker } from './CountryPicker';
 
 interface SettingsRowProps {
   icon: ReactNode;
@@ -28,7 +30,8 @@ export function SettingsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const theme = useTheme();
   const styles = useThemedStyles(createStyles);
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const [showCountryPicker, setShowCountryPicker] = useState(false);
   const { reloadSettings, settings, updateSettings } = useAppSettings();
   const dialog = useDialog();
   const [working, setWorking] = useState(false);
@@ -98,6 +101,14 @@ export function SettingsScreen() {
     );
   }
 
+  function countrySubtitle(): string {
+    if (settings.defaultCountry === COUNTRY_NONE) return t('country.none');
+    const country = resolveCountry(settings.defaultCountry);
+    const label = country ? `${countryName(country, locale)} (+${country.code})` : '';
+    if (settings.defaultCountry === COUNTRY_AUTO) return label ? `${t('country.auto')} · ${label}` : t('country.auto');
+    return label;
+  }
+
   return (
     <ScreenBackground>
       <TopBar title={t('settings.title')} />
@@ -115,6 +126,24 @@ export function SettingsScreen() {
               onPress={() => navigation.navigate('Appearance')}
               last
             />
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text accessibilityRole="header" style={styles.sectionTitle}>
+            {t('settings.phone_numbers')}
+          </Text>
+          <View style={styles.card}>
+            <Row
+              icon={<Globe size={18} color={theme.color.primary} />}
+              iconBackground={theme.color.primarySoft}
+              title={t('country.title')}
+              subtitle={countrySubtitle()}
+              onPress={() => setShowCountryPicker(true)}
+            />
+            <View style={styles.note}>
+              <Text style={styles.noteText}>{t('country.hint')}</Text>
+            </View>
           </View>
         </View>
 
@@ -196,6 +225,16 @@ export function SettingsScreen() {
           </View>
         </View>
       </ScrollView>
+      <Modal visible={showCountryPicker} animationType="slide" onRequestClose={() => setShowCountryPicker(false)}>
+        <CountryPicker
+          selected={settings.defaultCountry}
+          onClose={() => setShowCountryPicker(false)}
+          onSelect={(value) => {
+            updateSettings({ defaultCountry: value });
+            setShowCountryPicker(false);
+          }}
+        />
+      </Modal>
     </ScreenBackground>
   );
 }

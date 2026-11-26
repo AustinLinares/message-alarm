@@ -1,4 +1,5 @@
 import { getDb } from '../db/client';
+import { COUNTRY_AUTO, isCountrySetting } from '../countries';
 import { DEFAULT_GRADIENT, DEFAULT_THEME, GRADIENT_IDS, THEME_IDS, type GradientId, type ThemeId } from '../theme/themes';
 
 export interface AppSettings {
@@ -9,6 +10,8 @@ export interface AppSettings {
   // Android: ring on the alarm audio channel (alarm volume, works on silent).
   alarmMode: boolean;
   alarmBannerDismissed: boolean;
+  // Country code added to numbers saved without one: 'auto' | 'none' | ISO code.
+  defaultCountry: string;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -18,6 +21,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   changeIcon: false,
   alarmMode: false,
   alarmBannerDismissed: false,
+  defaultCountry: COUNTRY_AUTO,
 };
 
 // Keeps whatever is valid and falls back to defaults for the rest, so a
@@ -32,6 +36,7 @@ export function sanitizeSettings(raw: unknown, base: AppSettings = DEFAULT_SETTI
     alarmMode: typeof value.alarmMode === 'boolean' ? value.alarmMode : base.alarmMode,
     alarmBannerDismissed:
       typeof value.alarmBannerDismissed === 'boolean' ? value.alarmBannerDismissed : base.alarmBannerDismissed,
+    defaultCountry: isCountrySetting(value.defaultCountry) ? value.defaultCountry : base.defaultCountry,
   };
 }
 

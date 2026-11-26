@@ -135,6 +135,15 @@ export const APP_STRINGS: Record<string, StringEntry> = {
   },
 
   'notification.title': { es: 'Mensaje programado', en: 'Scheduled message' },
+  'settings.phone_numbers': { es: 'Números de teléfono', en: 'Phone numbers' },
+  'country.title': { es: 'Código de país por defecto', en: 'Default country code' },
+  'country.auto': { es: 'Automático', en: 'Automatic' },
+  'country.none': { es: 'Ninguno', en: 'None' },
+  'country.search_placeholder': { es: 'Buscar país o código', en: 'Search country or code' },
+  'country.hint': {
+    es: 'Se agrega a los números guardados sin código de país al abrir WhatsApp. Los que empiezan con + o 00 mantienen su propio país. Automático usa la región de tu teléfono.',
+    en: 'Added to numbers saved without a country code when opening WhatsApp. Numbers starting with + or 00 keep their own country. Automatic uses your phone\'s region.',
+  },
   'picker.date_title': { es: 'Fecha', en: 'Date' },
   'picker.time_title': { es: 'Hora', en: 'Time' },
   'picker.prev_month': { es: 'Mes anterior', en: 'Previous month' },

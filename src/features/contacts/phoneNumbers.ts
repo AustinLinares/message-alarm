@@ -23,6 +23,20 @@ export function isSameNumber(a: string, b: string): boolean {
   return core.length >= MIN_SUFFIX_DIGITS && long.endsWith(core);
 }
 
+// Digits WhatsApp needs (country code included). A "+" or "00" prefix means the
+// number already carries its own country; otherwise the default one is added,
+// dropping a local trunk "0" and leaving numbers that visibly start with the
+// code alone.
+export function toInternationalDigits(raw: string, dialCode: string | null): string {
+  const trimmed = raw.trim();
+  const digits = trimmed.replace(/\D/g, '');
+  if (trimmed.startsWith('+')) return digits;
+  if (digits.startsWith('00')) return digits.slice(2);
+  if (!dialCode) return digits;
+  if (digits.startsWith(dialCode) && digits.length - dialCode.length >= 8) return digits;
+  return dialCode + digits.replace(/^0+/, '');
+}
+
 export function isMobileLabel(label?: string): boolean {
   return !!label && /mobile|m[oó]vil|cell|celular|iphone/i.test(label);
 }
