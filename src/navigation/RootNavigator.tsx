@@ -42,9 +42,14 @@ function useNotificationNavigation() {
       const scheduledMessageId = readString(data, 'scheduledMessageId');
       if (!scheduledMessageId) return;
       const occurrenceId = await handleNotificationTap(scheduledMessageId, readString(data, 'occurrenceId'));
-      if (occurrenceId) {
-        navigationRef.navigate('Occurrence', { occurrenceId });
+      if (!occurrenceId) return;
+      // Already showing this alarm (e.g. it opened on its own and the user then
+      // tapped the banner): don't stack a second copy.
+      const current = navigationRef.getCurrentRoute();
+      if (current?.name === 'Occurrence' && (current.params as { occurrenceId?: string } | undefined)?.occurrenceId === occurrenceId) {
+        return;
       }
+      navigationRef.navigate('Occurrence', { occurrenceId });
     }
 
     const lastResponse = Notifications.getLastNotificationResponse();
@@ -53,7 +58,15 @@ function useNotificationNavigation() {
     const subscription = Notifications.addNotificationResponseReceivedListener((response) => {
       void openOccurrence(response.notification.request.content.data);
     });
-    return () => subscription.remove();
+    // App open and in the foreground when the alarm rings: show the alarm
+    // screen right away instead of waiting for a tap on the banner.
+    const receivedSubscription = Notifications.addNotificationReceivedListener((notification) => {
+      void openOccurrence(notification.request.content.data);
+    });
+    return () => {
+      subscription.remove();
+      receivedSubscription.remove();
+    };
   }, []);
 }
 
